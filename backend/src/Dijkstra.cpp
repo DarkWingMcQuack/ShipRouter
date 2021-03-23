@@ -46,9 +46,13 @@ auto Dijkstra::findRoute(NodeId source, NodeId target) noexcept
         //when reusing the pq
         pq_.pop();
 
-        const auto neigbours = graph_.getNeigboursOf(current_node);
+        const auto edge_ids = graph_.getEdgeIdsOf(current_node);
 
-        for(auto [neig, dist] : neigbours) {
+        for(auto id : edge_ids) {
+            const auto& edge = graph_.getEdge(id);
+            const auto neig = edge.target_;
+            const auto dist = edge.distance_;
+
             auto neig_dist = getDistanceTo(neig);
             const auto new_dist = current_dist + dist;
 
@@ -158,9 +162,13 @@ auto Dijkstra::computeDistance(NodeId source, NodeId target) noexcept
         //when reusing the pq
         pq_.pop();
 
-        const auto neigbours = graph_.getNeigboursOf(current_node);
+        const auto edge_ids = graph_.getEdgeIdsOf(current_node);
 
-        for(auto [neig, dist] : neigbours) {
+        for(auto id : edge_ids) {
+            const auto& edge = graph_.getEdge(id);
+            const auto neig = edge.target_;
+            const auto dist = edge.distance_;
+
             auto neig_dist = getDistanceTo(neig);
             const auto new_dist = current_dist + dist;
 

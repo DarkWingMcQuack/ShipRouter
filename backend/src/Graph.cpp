@@ -12,8 +12,10 @@ Graph::Graph(SphericalGrid&& g)
     : offset_(g.size() + 1, 0),
       snap_settled_(g.size(), false),
       grid_(std::move(g)),
-	  level_(g.size(), 0)
+      level_(g.size(), 0)
 {
+
+    auto edge_counter = 0ul;
     for(auto id : utils::range(grid_.size())) {
         if(!grid_.indexIsLand(id)) {
             auto neigs = grid_.getNeighbours(id);
@@ -26,20 +28,24 @@ Graph::Graph(SphericalGrid&& g)
 
             neigs.erase(remove_iter, std::end(neigs));
 
-            std::vector<std::pair<NodeId, Distance>> neig_dist;
+            std::vector<Edge> new_edges;
             std::transform(std::begin(neigs),
                            std::end(neigs),
-                           std::back_inserter(neig_dist),
+                           std::back_inserter(new_edges),
                            [&](auto neig) {
                                auto [start_lat, start_lng] = grid_.idToLatLng(id);
                                auto [dest_lat, dest_lng] = grid_.idToLatLng(neig);
                                auto distance = ::distanceBetween(start_lat, start_lng, dest_lat, dest_lng);
 
-                               return std::pair{neig, distance};
+                               return Edge{neig, static_cast<Distance>(distance), std::nullopt};
                            });
 
-            neigbours_ = concat(std::move(neigbours_),
-                                std::move(neig_dist));
+            for(auto i = 0ul; i < new_edges.size(); i++) {
+                neigbours_.emplace_back(edge_counter++);
+            }
+
+            edges_ = concat(std::move(edges_),
+                            std::move(new_edges));
         }
 
         offset_[id + 1] = neigbours_.size();
@@ -50,7 +56,8 @@ Graph::Graph(SphericalGrid&& g)
     }
 
     //insert dummy at the end
-    neigbours_.emplace_back(std::numeric_limits<NodeId>::max(), UNREACHABLE);
+    edges_.emplace_back(Edge{NON_EXISTENT, UNREACHABLE, std::nullopt});
+    neigbours_.emplace_back(edge_counter);
 }
 
 auto Graph::idToLat(NodeId id) const noexcept
@@ -89,8 +96,8 @@ auto Graph::size() const noexcept
     return grid_.lats_.size();
 }
 
-auto Graph::getNeigboursOf(NodeId node) const noexcept
-    -> nonstd::span<const std::pair<NodeId, Distance>>
+auto Graph::getEdgeIdsOf(NodeId node) const noexcept
+    -> nonstd::span<const EdgeId>
 {
     const auto start_offset = offset_[node];
     const auto end_offset = offset_[node + 1];
@@ -98,6 +105,11 @@ auto Graph::getNeigboursOf(NodeId node) const noexcept
     const auto* end = &neigbours_[end_offset];
 
     return nonstd::span{start, end};
+}
+auto Graph::getEdge(EdgeId id) const noexcept
+    -> const Edge&
+{
+    return edges_[id];
 }
 
 auto Graph::gridToId(std::size_t m, std::size_t n) const noexcept
@@ -245,8 +257,9 @@ auto Graph::snapToGridNode(Latitude<Degree> lat,
 
     while(true) {
         const auto best_before_insert = candidates.top();
-        for(auto [neig, _] : getNeigboursOf(best_before_insert)) {
-            candidates.emplace(neig);
+        for(auto edge_id : getEdgeIdsOf(best_before_insert)) {
+            const auto& edge = getEdge(edge_id);
+            candidates.emplace(edge.target_);
         }
         const auto best_after_insert = candidates.top();
 

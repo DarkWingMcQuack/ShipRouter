@@ -4,6 +4,13 @@
 #include <SphericalGrid.hpp>
 #include <nonstd/span.hpp>
 
+struct Edge
+{
+    NodeId target_;
+    Distance distance_;
+    std::optional<std::pair<EdgeId, EdgeId>> shortcut_for_;
+};
+
 class Graph
 {
 public:
@@ -24,8 +31,11 @@ public:
     auto isValidId(NodeId id) const noexcept
         -> bool;
 
-    auto getNeigboursOf(NodeId node) const noexcept
-        -> nonstd::span<const std::pair<NodeId, Distance>>;
+    auto getEdgeIdsOf(NodeId node) const noexcept
+        -> nonstd::span<const EdgeId>;
+
+    auto getEdge(EdgeId) const noexcept
+        -> const Edge&;
 
     auto size() const noexcept
         -> std::size_t;
@@ -74,8 +84,9 @@ private:
     std::vector<std::size_t> ns_;
     std::vector<std::size_t> ms_;
 
-    std::vector<std::pair<NodeId, Distance>> neigbours_;
+    std::vector<EdgeId> neigbours_;
     std::vector<size_t> offset_;
+    std::vector<Edge> edges_;
 
     mutable std::vector<bool> snap_settled_;
     const SphericalGrid grid_;
