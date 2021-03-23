@@ -39,6 +39,15 @@ public:
     auto isLandNode(NodeId node) const noexcept
         -> bool;
 
+    auto getLevelOf(NodeId node) const noexcept
+        -> Level;
+
+    auto isAlreadyContracted(NodeId node) const noexcept
+        -> bool;
+
+    auto getDegree(NodeId node) const noexcept
+        -> std::size_t;
+
 private:
     auto getSnapNodeCandidate(Latitude<Degree> lat,
                               Longitude<Degree> lng) const noexcept
@@ -56,6 +65,11 @@ private:
     auto getGridNeigboursOf(std::size_t m, std::size_t n) const noexcept
         -> std::vector<NodeId>;
 
+    auto isFullyContracted() const noexcept
+        -> bool;
+
+
+
 private:
     std::vector<std::size_t> ns_;
     std::vector<std::size_t> ms_;
@@ -65,4 +79,6 @@ private:
 
     mutable std::vector<bool> snap_selled_;
     const SphericalGrid grid_;
+
+    std::vector<Level> level_;
 };

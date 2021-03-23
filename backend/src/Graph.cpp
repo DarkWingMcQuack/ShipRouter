@@ -11,7 +11,8 @@
 Graph::Graph(SphericalGrid&& g)
     : offset_(g.size() + 1, 0),
       snap_selled_(g.size(), false),
-      grid_(std::move(g))
+      grid_(std::move(g)),
+	  level_(g.size(), 0)
 {
     for(auto id : utils::range(grid_.size())) {
         if(!grid_.indexIsLand(id)) {
