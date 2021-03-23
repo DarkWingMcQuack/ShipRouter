@@ -106,6 +106,7 @@ auto Graph::getEdgeIdsOf(NodeId node) const noexcept
 
     return nonstd::span{start, end};
 }
+
 auto Graph::getEdge(EdgeId id) const noexcept
     -> const Edge&
 {

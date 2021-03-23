@@ -15,7 +15,7 @@ public:
           number_of_sphere_nodes_(number_of_nodes) {}
 
     auto getPort() const
-        -> std::int16_t
+        -> std::uint16_t
     {
         return port_;
     }
