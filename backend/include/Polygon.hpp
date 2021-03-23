@@ -24,6 +24,12 @@ private:
     std::vector<double> x_;
     std::vector<double> y_;
     std::vector<double> z_;
+    Latitude<Degree> top_;
+    Longitude<Degree> left_;
+    Latitude<Degree> bottom_;
+    Longitude<Degree> right_;
+
+    auto pointInRectangle(Latitude<Degree> lat, Longitude<Degree> lng) const -> bool;
 };
 
 

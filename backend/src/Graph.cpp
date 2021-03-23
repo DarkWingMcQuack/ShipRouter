@@ -10,7 +10,7 @@
 
 Graph::Graph(SphericalGrid&& g)
     : offset_(g.size() + 1, 0),
-      snap_selled_(g.size(), false),
+      snap_settled_(g.size(), false),
       grid_(std::move(g)),
 	  level_(g.size(), 0)
 {
@@ -189,13 +189,8 @@ auto Graph::getSnapNodeCandidate(Latitude<Degree> lat,
     auto workstack = getGridNeigboursOf(m, n);
 
     while(!workstack.empty()) {
-        fmt::print("workstack: {}", workstack);
-        std::cout << std::endl;
-        fmt::print("candidates: {}", candidates);
-        std::cout << std::endl;
         const auto candidate = workstack.back();
         workstack.pop_back();
-        snap_selled_[candidate] = true;
         touched_nodes.emplace_back(candidate);
 
         if(!isLandNode(candidate)) {
@@ -203,17 +198,18 @@ auto Graph::getSnapNodeCandidate(Latitude<Degree> lat,
             continue;
         }
 
-        if(snap_selled_[candidate]) {
+        if(snap_settled_[candidate]) {
             continue;
         }
 
         workstack = concat(std::move(workstack),
                            getGridNeigboursOf(ms_[candidate],
                                               ns_[candidate]));
+        snap_settled_[candidate] = true;
     }
 
     for(auto touched : touched_nodes) {
-        snap_selled_[touched] = false;
+        snap_settled_[touched] = false;
     }
 
     return *std::min_element(std::cbegin(candidates),

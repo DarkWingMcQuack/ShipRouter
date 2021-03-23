@@ -28,9 +28,7 @@
       </l-control>
       <l-polyline v-if="path" :lat-lngs="path.coordinates">
         <l-tooltip>
-          <strong
-            >Distance: {{ (path.distance / 100 / 1000).toFixed(2) }}km</strong
-          >
+          <strong>Distance: {{ (path.distance / 1000).toFixed(2) }}km</strong>
         </l-tooltip>
       </l-polyline>
       <l-marker v-if="start" :lat-lng="start"></l-marker>

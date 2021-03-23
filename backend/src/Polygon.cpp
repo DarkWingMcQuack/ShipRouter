@@ -26,7 +26,24 @@ auto latLngTo3D(Latitude<Radian> lat, Longitude<Radian> lng) noexcept
 
 Polygon::Polygon(const std::vector<OSMNode>& nodes)
 {
+    const auto first = nodes.front();
+    bottom_ = first.getLat();
+    top_ = first.getLat();
+    left_ = first.getLon();
+    right_ = first.getLon();
     for(const auto& n : nodes) {
+        if(n.getLat() < bottom_) {
+            bottom_ = n.getLat();
+        }
+        if(n.getLat() > top_) {
+            top_ = n.getLat();
+        }
+        if(n.getLon() < left_) {
+            left_ = n.getLon();
+        }
+        if(n.getLon() > right_) {
+            right_ = n.getLon();
+        }
         auto lat = n.getLat().toRadian();
         auto lng = n.getLon().toRadian();
         auto [x, y, z] = latLngTo3D(lat, lng);
@@ -37,9 +54,17 @@ Polygon::Polygon(const std::vector<OSMNode>& nodes)
     }
 }
 
+auto Polygon::pointInRectangle(Latitude<Degree> lat, Longitude<Degree> lng) const -> bool
+{
+    return bottom_ <= lat and lat <= top_ and left_ <= lng and lng <= right_;
+}
+
 auto Polygon::pointInPolygon(Latitude<Degree> lat, Longitude<Degree> lng) const
     -> bool
 {
+    if(!pointInRectangle(lat, lng)) {
+        return false;
+    }
     const auto size = numberOfPoints();
     const auto range = utils::range(size);
     const auto p = Vector3D{lat.toRadian(), lng.toRadian()}
