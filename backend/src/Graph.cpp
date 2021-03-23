@@ -21,11 +21,10 @@ Graph::Graph(SphericalGrid&& g)
 
             std::sort(std::begin(neigs),
                       std::end(neigs));
-            auto remove_iter =
-                std::unique(std::begin(neigs),
-                            std::end(neigs));
 
-            neigs.erase(remove_iter, std::end(neigs));
+            neigs.erase(std::unique(std::begin(neigs),
+                                    std::end(neigs)),
+                        std::end(neigs));
 
             std::vector<Edge> new_edges;
             std::transform(std::begin(neigs),
@@ -66,6 +65,8 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges)
     std::vector<size_t> offset(grid_.size() + 1, 0);
     std::vector<Edge> edges;
 
+    auto max_edge_id = 0ul;
+
     for(auto id : utils::range(grid_.size())) {
         if(!grid_.indexIsLand(id)) {
             auto edge_ids = getEdgeIdsOf(id);
@@ -82,7 +83,7 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges)
             if(shortcut_iter != std::end(new_edges)) {
 
                 for([[maybe_unused]] auto&& _ : shortcut_iter->second) {
-                    neigbours_.emplace_back(max_edge_id_++);
+                    neigbours_.emplace_back(max_edge_id++);
                 }
 
                 edges = concat(std::move(edges),
@@ -95,8 +96,9 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges)
 
     //insert dummy at the end
     edges.emplace_back(Edge{NON_EXISTENT, UNREACHABLE, std::nullopt});
-    neigbours.emplace_back(max_edge_id_);
+    neigbours.emplace_back(max_edge_id);
 
+    max_edge_id_ = max_edge_id;
     neigbours_ = std::move(neigbours);
     edges_ = std::move(edges);
     offset_ = std::move(offset);
