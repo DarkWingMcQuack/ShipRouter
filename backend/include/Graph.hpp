@@ -40,6 +40,9 @@ public:
     auto size() const noexcept
         -> std::size_t;
 
+    auto rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges) && noexcept
+        -> Graph;
+
     auto snapToGridNode(Latitude<Degree> lat, Longitude<Degree> lng) const noexcept
         -> NodeId;
 
@@ -92,4 +95,6 @@ private:
     const SphericalGrid grid_;
 
     std::vector<Level> level_;
+
+    std::size_t max_edge_id_;
 };

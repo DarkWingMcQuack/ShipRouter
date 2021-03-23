@@ -12,10 +12,9 @@ Graph::Graph(SphericalGrid&& g)
     : offset_(g.size() + 1, 0),
       snap_settled_(g.size(), false),
       grid_(std::move(g)),
-      level_(g.size(), 0)
+      level_(g.size(), 0),
+      max_edge_id_(0)
 {
-
-    auto edge_counter = 0ul;
     for(auto id : utils::range(grid_.size())) {
         if(!grid_.indexIsLand(id)) {
             auto neigs = grid_.getNeighbours(id);
@@ -41,7 +40,7 @@ Graph::Graph(SphericalGrid&& g)
                            });
 
             for(auto i = 0ul; i < new_edges.size(); i++) {
-                neigbours_.emplace_back(edge_counter++);
+                neigbours_.emplace_back(max_edge_id_++);
             }
 
             edges_ = concat(std::move(edges_),
@@ -57,7 +56,53 @@ Graph::Graph(SphericalGrid&& g)
 
     //insert dummy at the end
     edges_.emplace_back(Edge{NON_EXISTENT, UNREACHABLE, std::nullopt});
-    neigbours_.emplace_back(edge_counter);
+    neigbours_.emplace_back(max_edge_id_);
+}
+
+auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges) && noexcept
+    -> Graph
+{
+    std::vector<EdgeId> neigbours;
+    std::vector<size_t> offset(grid_.size() + 1, 0);
+    std::vector<Edge> edges;
+
+    for(auto id : utils::range(grid_.size())) {
+        if(!grid_.indexIsLand(id)) {
+            auto edge_ids = getEdgeIdsOf(id);
+
+            neigbours.insert(std::end(neigbours),
+                             std::begin(edge_ids),
+                             std::end(edge_ids));
+
+            for(auto edge_id : edge_ids) {
+                edges.emplace_back(getEdge(edge_id));
+            }
+
+            auto shortcut_iter = new_edges.find(id);
+            if(shortcut_iter != std::end(new_edges)) {
+
+                for([[maybe_unused]] auto&& _ : shortcut_iter->second) {
+                    neigbours_.emplace_back(max_edge_id_++);
+                }
+
+                edges = concat(std::move(edges),
+                               std::move(shortcut_iter->second));
+            }
+
+            offset[id + 1] = neigbours.size();
+        }
+    }
+
+    //insert dummy at the end
+    edges.emplace_back(Edge{NON_EXISTENT, UNREACHABLE, std::nullopt});
+    neigbours.emplace_back(max_edge_id_);
+
+    neigbours_ = std::move(neigbours);
+    edges_ = std::move(edges);
+    offset_ = std::move(offset);
+
+
+    return std::move(*this);
 }
 
 auto Graph::idToLat(NodeId id) const noexcept
@@ -124,7 +169,6 @@ auto Graph::isLandNode(NodeId node) const noexcept
 {
     return !grid_.is_water_[node];
 }
-
 
 auto Graph::getRowGridNeigboursOf(std::size_t m, std::size_t n) const noexcept
     -> std::vector<NodeId>
