@@ -43,7 +43,7 @@ auto IndependentSetCalculator::calculateNextSet() noexcept
 
         for(auto edge_id : graph_.getEdgeIdsOf(n)) {
             const auto& edge = graph_.getEdge(edge_id);
-            const auto& neig = edge.target_;
+            const auto& neig = edge.target;
 
             if(!visited_[neig]) {
                 touched_.emplace_back(neig);

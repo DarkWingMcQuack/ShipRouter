@@ -12,7 +12,7 @@ Graph::Graph(SphericalGrid&& g)
     : offset_(g.size() + 1, 0),
       snap_settled_(g.size(), false),
       grid_(std::move(g)),
-      level_(g.size(), 0),
+      level_(grid_.size(), LEVEL_NOT_SET),
       max_edge_id_(0)
 {
     for(auto id : utils::range(grid_.size())) {
@@ -109,6 +109,12 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
     neigbours_ = std::move(neigbours);
     edges_ = std::move(edges);
     offset_ = std::move(offset);
+}
+
+auto Graph::isAlreadyContracted(NodeId node) const noexcept
+    -> bool
+{
+    return level_[node] != LEVEL_NOT_SET;
 }
 
 auto Graph::idToLat(NodeId id) const noexcept
@@ -310,7 +316,7 @@ auto Graph::snapToGridNode(Latitude<Degree> lat,
         const auto best_before_insert = candidates.top();
         for(auto edge_id : getEdgeIdsOf(best_before_insert)) {
             const auto& edge = getEdge(edge_id);
-            candidates.emplace(edge.target_);
+            candidates.emplace(edge.target);
         }
         const auto best_after_insert = candidates.top();
 

@@ -50,8 +50,8 @@ auto Dijkstra::findRoute(NodeId source, NodeId target) noexcept
 
         for(auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
-            const auto neig = edge.target_;
-            const auto dist = edge.distance_;
+            const auto neig = edge.target;
+            const auto dist = edge.distance;
 
             auto neig_dist = getDistanceTo(neig);
             const auto new_dist = current_dist + dist;
@@ -105,8 +105,8 @@ auto Dijkstra::shortestPathSTGoesOverU(NodeId s,
 
         for(auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
-            const auto neig = edge.target_;
-            const auto dist = edge.distance_;
+            const auto neig = edge.target;
+            const auto dist = edge.distance;
 
             auto neig_dist = getDistanceTo(neig);
             const auto new_dist = current_dist + dist;
@@ -222,8 +222,8 @@ auto Dijkstra::computeDistance(NodeId source, NodeId target) noexcept
 
         for(auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
-            const auto neig = edge.target_;
-            const auto dist = edge.distance_;
+            const auto neig = edge.target;
+            const auto dist = edge.distance;
 
             auto neig_dist = getDistanceTo(neig);
             const auto new_dist = current_dist + dist;

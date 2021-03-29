@@ -43,18 +43,22 @@ auto GraphContractor::contract(NodeId node) noexcept
 
     for(auto outer_id : edge_ids) {
         const auto& outer_edge = graph_.getEdge(outer_id);
-        const auto source = outer_edge.target_;
+        const auto source = outer_edge.target;
+
+        if(graph_.isAlreadyContracted(source)) {
+            continue;
+        }
 
         for(auto inner_id : edge_ids) {
             const auto& inner_edge = graph_.getEdge(inner_id);
-            const auto target = inner_edge.target_;
+            const auto target = inner_edge.target;
 
-            if(source == target) {
+            if(source == target or graph_.isAlreadyContracted(target)) {
                 continue;
             }
 
             if(dijkstra_.shortestPathSTGoesOverU(source, target, node)) {
-                auto distance = inner_edge.distance_ + outer_edge.distance_;
+                auto distance = inner_edge.distance + outer_edge.distance;
                 auto recurse_pair = std::pair{outer_id, inner_id};
                 shortcuts[source].emplace_back(target, distance, recurse_pair);
                 counter++;
@@ -62,10 +66,26 @@ auto GraphContractor::contract(NodeId node) noexcept
         }
     }
 
-    std::int64_t edge_diff = counter - 2 * edge_ids.size();
+    auto edge_diff = counter - countObsoleteEdges(node);
 
-    return NodeContractionResult{std::move(shortcuts),
-                                 edge_diff};
+    return NodeContractionResult{std::move(shortcuts), edge_diff};
+}
+
+
+auto GraphContractor::countObsoleteEdges(NodeId node) const noexcept
+    -> std::int64_t
+{
+    auto edge_ids = graph_.getEdgeIdsOf(node);
+
+    return std::count_if(std::begin(edge_ids),
+                         std::end(edge_ids),
+                         [this](auto id) {
+                             const auto& edge = graph_.getEdge(id);
+                             auto destination = edge.target_;
+
+                             return !graph_.isAlreadyContracted(destination);
+                         })
+        * 2;
 }
 
 namespace {

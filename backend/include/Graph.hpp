@@ -6,9 +6,9 @@
 
 struct Edge
 {
-    NodeId target_;
-    Distance distance_;
-    std::optional<std::pair<EdgeId, EdgeId>> shortcut_for_;
+    NodeId target;
+    Distance distance;
+    std::optional<std::pair<EdgeId, EdgeId>> shortcut_for;
 };
 
 class Graph
