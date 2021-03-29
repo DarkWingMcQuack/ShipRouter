@@ -68,6 +68,62 @@ auto Dijkstra::findRoute(NodeId source, NodeId target) noexcept
     return extractShortestPath(source, target);
 }
 
+
+auto Dijkstra::shortestPathSTGoesOverU(NodeId s,
+                                       NodeId t,
+                                       NodeId u) noexcept
+    -> bool
+{
+    if(isSettled(t)) {
+        return previous_nodes_[t] == u
+            and previous_nodes_[u] == s;
+    }
+
+    if(s != last_source_) {
+        last_source_ = s;
+        reset();
+        pq_.emplace(s, 0l);
+        setDistanceTo(s, 0);
+        touched_.emplace_back(s);
+    }
+
+    while(!pq_.empty()) {
+        const auto [current_node, current_dist] = pq_.top();
+
+        settle(current_node);
+
+        if(current_node == t) {
+            return previous_nodes_[t] == u
+                and previous_nodes_[u] == s;
+        }
+
+        //pop after the return, otherwise we loose a value
+        //when reusing the pq
+        pq_.pop();
+
+        const auto edge_ids = graph_.getEdgeIdsOf(current_node);
+
+        for(auto id : edge_ids) {
+            const auto& edge = graph_.getEdge(id);
+            const auto neig = edge.target_;
+            const auto dist = edge.distance_;
+
+            auto neig_dist = getDistanceTo(neig);
+            const auto new_dist = current_dist + dist;
+
+            if(UNREACHABLE != current_dist and neig_dist > new_dist) {
+                touched_.emplace_back(neig);
+                setDistanceTo(neig, new_dist);
+                pq_.emplace(neig, new_dist);
+                previous_nodes_[neig] = current_node;
+            }
+        }
+    }
+
+    return previous_nodes_[t] == u
+        and previous_nodes_[u] == s;
+}
+
 auto Dijkstra::findDistance(NodeId source, NodeId target) noexcept
     -> Distance
 {

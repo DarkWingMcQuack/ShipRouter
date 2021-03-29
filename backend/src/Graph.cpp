@@ -58,8 +58,11 @@ Graph::Graph(SphericalGrid&& g)
     neigbours_.emplace_back(max_edge_id_);
 }
 
-auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges) && noexcept
-    -> Graph
+
+auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
+                        const std::vector<NodeId>& contracted_nodes,
+                        Level current_level) noexcept
+    -> void
 {
     std::vector<EdgeId> neigbours;
     std::vector<size_t> offset(grid_.size() + 1, 0);
@@ -94,6 +97,10 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges)
         }
     }
 
+    for(auto n : contracted_nodes) {
+        level_[n] = current_level;
+    }
+
     //insert dummy at the end
     edges.emplace_back(Edge{NON_EXISTENT, UNREACHABLE, std::nullopt});
     neigbours.emplace_back(max_edge_id);
@@ -102,9 +109,6 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges)
     neigbours_ = std::move(neigbours);
     edges_ = std::move(edges);
     offset_ = std::move(offset);
-
-
-    return std::move(*this);
 }
 
 auto Graph::idToLat(NodeId id) const noexcept

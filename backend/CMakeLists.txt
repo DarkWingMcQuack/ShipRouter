@@ -56,6 +56,8 @@ target_sources(ShipRouterSrc
   ${CMAKE_CURRENT_LIST_DIR}/include/Range.hpp
   ${CMAKE_CURRENT_LIST_DIR}/include/SphericalGrid.hpp
   ${CMAKE_CURRENT_LIST_DIR}/include/ServiceManager.hpp
+  ${CMAKE_CURRENT_LIST_DIR}/include/IndependentSetCalculator.hpp
+  ${CMAKE_CURRENT_LIST_DIR}/include/GraphContractor.hpp
 
   PRIVATE
   src/Graph.cpp
@@ -68,6 +70,8 @@ target_sources(ShipRouterSrc
   src/SphericalGrid.cpp
   src/Dijkstra.cpp
   src/ServiceManager.cpp
+  src/IndependentSetCalculator.cpp
+  src/GraphContractor.cpp
   )
 
 # add the dependencies of the target to enforce

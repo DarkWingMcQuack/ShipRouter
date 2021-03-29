@@ -41,11 +41,14 @@ auto IndependentSetCalculator::calculateNextSet() noexcept
         independent_set.emplace_back(n);
         touched_.emplace_back(n);
 
-        for(auto [neig, _] : graph_.getNeigboursOf(n)) {
+        for(auto edge_id : graph_.getEdgeIdsOf(n)) {
+            const auto& edge = graph_.getEdge(edge_id);
+            const auto& neig = edge.target_;
+
             if(!visited_[neig]) {
                 touched_.emplace_back(neig);
+				visited_[neig] = true;
             }
-            visited_[neig] = true;
         }
     }
 
@@ -68,4 +71,6 @@ auto IndependentSetCalculator::cleanup() noexcept
     for(auto n : touched_) {
         visited_[n] = false;
     }
+
+    touched_.clear();
 }

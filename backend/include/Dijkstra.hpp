@@ -40,6 +40,11 @@ public:
     auto findDistance(NodeId source, NodeId target) noexcept
         -> Distance;
 
+    auto shortestPathSTGoesOverU(NodeId s,
+                                 NodeId t,
+                                 NodeId u) noexcept
+        -> bool;
+
 private:
     auto getDistanceTo(NodeId n) const noexcept
         -> Distance;

@@ -40,8 +40,10 @@ public:
     auto size() const noexcept
         -> std::size_t;
 
-    auto rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges) && noexcept
-        -> Graph;
+    auto rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
+                     const std::vector<NodeId>& contracted_nodes,
+                     Level current_level) noexcept
+        -> void;
 
     auto snapToGridNode(Latitude<Degree> lat, Longitude<Degree> lng) const noexcept
         -> NodeId;
