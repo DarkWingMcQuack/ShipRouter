@@ -9,16 +9,22 @@ class CoastlineLookup;
 class Polygon
 {
 public:
-    Polygon(const std::vector<OSMNode>& nodes);
+    Polygon(const std::vector<OSMNode>& nodes) noexcept;
 
-    auto pointInPolygon(Latitude<Degree> lat, Longitude<Degree> lng) const
+    auto pointInPolygon(Latitude<Degree> lat,
+                        Longitude<Degree> lng) const noexcept
         -> bool;
 
-    auto numberOfPoints() const
+    auto numberOfPoints() const noexcept
         -> std::size_t;
 
-    auto getLatAndLng() const
+    auto getLatAndLng() const noexcept
         -> std::vector<std::pair<double, double>>;
+
+private:
+    auto pointInRectangle(Latitude<Degree> lat,
+                          Longitude<Degree> lng) const noexcept
+        -> bool;
 
 private:
     std::vector<double> x_;
@@ -28,8 +34,6 @@ private:
     Longitude<Degree> left_;
     Latitude<Degree> bottom_;
     Longitude<Degree> right_;
-
-    auto pointInRectangle(Latitude<Degree> lat, Longitude<Degree> lng) const -> bool;
 };
 
 

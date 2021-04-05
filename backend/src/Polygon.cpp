@@ -24,7 +24,7 @@ auto latLngTo3D(Latitude<Radian> lat, Longitude<Radian> lng) noexcept
 
 } // namespace
 
-Polygon::Polygon(const std::vector<OSMNode>& nodes)
+Polygon::Polygon(const std::vector<OSMNode>& nodes) noexcept
 {
     const auto first = nodes.front();
     bottom_ = first.getLat();
@@ -54,12 +54,16 @@ Polygon::Polygon(const std::vector<OSMNode>& nodes)
     }
 }
 
-auto Polygon::pointInRectangle(Latitude<Degree> lat, Longitude<Degree> lng) const -> bool
+auto Polygon::pointInRectangle(Latitude<Degree> lat, Longitude<Degree> lng) const noexcept
+    -> bool
 {
-    return bottom_ <= lat and lat <= top_ and left_ <= lng and lng <= right_;
+    return bottom_ <= lat
+        and lat <= top_
+        and left_ <= lng
+        and lng <= right_;
 }
 
-auto Polygon::pointInPolygon(Latitude<Degree> lat, Longitude<Degree> lng) const
+auto Polygon::pointInPolygon(Latitude<Degree> lat, Longitude<Degree> lng) const noexcept
     -> bool
 {
     if(!pointInRectangle(lat, lng)) {
@@ -81,7 +85,7 @@ auto Polygon::pointInPolygon(Latitude<Degree> lat, Longitude<Degree> lng) const
 
 
     auto sum = std::transform_reduce(
-        std::execution::par_unseq,
+        std::execution::unseq,
         std::begin(range),
         std::end(range),
         0.0,
@@ -97,7 +101,6 @@ auto Polygon::pointInPolygon(Latitude<Degree> lat, Longitude<Degree> lng) const
 
     // external points should sum up to something close to 0
     // internal points should sum up to something smaller than pi
-
     return std::abs(sum) > PI;
 }
 
@@ -115,7 +118,7 @@ auto vec3DtoLatLong(double x, double y, double z) noexcept
 
 } // namespace
 
-auto Polygon::getLatAndLng() const
+auto Polygon::getLatAndLng() const noexcept
     -> std::vector<std::pair<double, double>>
 {
     std::vector<std::pair<double, double>> ret_vec;
@@ -133,7 +136,7 @@ auto Polygon::getLatAndLng() const
     return ret_vec;
 }
 
-auto Polygon::numberOfPoints() const
+auto Polygon::numberOfPoints() const noexcept
     -> std::size_t
 {
     return x_.size();

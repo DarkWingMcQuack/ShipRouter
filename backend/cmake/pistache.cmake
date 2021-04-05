@@ -12,6 +12,7 @@ set(CMAKE_ARGS
 ExternalProject_Add(pistache-project
   PREFIX deps/pistache
   GIT_REPOSITORY https://github.com/oktal/pistache.git
+  GIT_TAG 06508ad02b14c9c5e3ac16e7a095e86114150a16
   DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/downloads
   CMAKE_ARGS ${CMAKE_ARGS}
   PATCH_COMMAND cmake -E make_directory <SOURCE_DIR>/win32-deps/include

@@ -35,7 +35,7 @@ Graph::Graph(SphericalGrid&& g)
                                auto [dest_lat, dest_lng] = grid_.idToLatLng(neig);
                                auto distance = ::distanceBetween(start_lat, start_lng, dest_lat, dest_lng);
 
-                               return Edge{neig, static_cast<Distance>(distance), std::nullopt};
+                               return Edge{id, neig, static_cast<Distance>(distance), std::nullopt};
                            });
 
             for(auto i = 0ul; i < new_edges.size(); i++) {
@@ -54,7 +54,7 @@ Graph::Graph(SphericalGrid&& g)
     }
 
     //insert dummy at the end
-    edges_.emplace_back(Edge{NON_EXISTENT, UNREACHABLE, std::nullopt});
+    edges_.emplace_back(NON_EXISTENT, NON_EXISTENT, UNREACHABLE, std::nullopt);
     neigbours_.emplace_back(max_edge_id_);
 }
 
@@ -65,36 +65,33 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
     -> void
 {
     std::vector<EdgeId> neigbours;
-    std::vector<size_t> offset(grid_.size() + 1, 0);
-    std::vector<Edge> edges;
+    std::vector<size_t> offset(grid_.size() + new_edges.size() + 1, 0);
 
-    auto max_edge_id = 0ul;
+    //remove the dummy entry
+    edges_.pop_back();
 
     for(auto id : utils::range(grid_.size())) {
-        if(!grid_.indexIsLand(id)) {
-            auto edge_ids = getEdgeIdsOf(id);
-
-            neigbours.insert(std::end(neigbours),
-                             std::begin(edge_ids),
-                             std::end(edge_ids));
-
-            for(auto edge_id : edge_ids) {
-                edges.emplace_back(getEdge(edge_id));
-            }
-
-            auto shortcut_iter = new_edges.find(id);
-            if(shortcut_iter != std::end(new_edges)) {
-
-                for([[maybe_unused]] auto&& _ : shortcut_iter->second) {
-                    neigbours_.emplace_back(max_edge_id++);
-                }
-
-                edges = concat(std::move(edges),
-                               std::move(shortcut_iter->second));
-            }
-
-            offset[id + 1] = neigbours.size();
+        if(grid_.indexIsLand(id)) {
+            continue;
         }
+        auto edge_ids = getEdgeIdsOf(id);
+
+        neigbours.insert(std::end(neigbours),
+                         std::begin(edge_ids),
+                         std::end(edge_ids));
+
+        auto shortcut_iter = new_edges.find(id);
+        if(shortcut_iter != std::end(new_edges)) {
+
+            for([[maybe_unused]] auto&& _ : shortcut_iter->second) {
+                neigbours.emplace_back(max_edge_id_++);
+            }
+
+            edges_ = concat(std::move(edges_),
+                            std::move(shortcut_iter->second));
+        }
+
+        offset[id + 1] = neigbours.size();
     }
 
     for(auto n : contracted_nodes) {
@@ -102,13 +99,32 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
     }
 
     //insert dummy at the end
-    edges.emplace_back(Edge{NON_EXISTENT, UNREACHABLE, std::nullopt});
-    neigbours.emplace_back(max_edge_id);
+    edges_.emplace_back(NON_EXISTENT, NON_EXISTENT, UNREACHABLE, std::nullopt);
+    neigbours.emplace_back(max_edge_id_);
 
-    max_edge_id_ = max_edge_id;
     neigbours_ = std::move(neigbours);
-    edges_ = std::move(edges);
     offset_ = std::move(offset);
+}
+
+
+auto Graph::getInverserEdgeId(EdgeId id) const noexcept
+    -> std::optional<EdgeId>
+{
+    const auto& edge = getEdge(id);
+    auto source = edge.source;
+    auto target = edge.target;
+
+    auto target_edge_ids = getEdgeIdsOf(target);
+
+    for(auto inv_id : target_edge_ids) {
+        const auto& inv_edge = getEdge(inv_id);
+
+        if(inv_edge.target == source) {
+            return inv_id;
+        }
+    }
+
+    return std::nullopt;
 }
 
 auto Graph::isAlreadyContracted(NodeId node) const noexcept

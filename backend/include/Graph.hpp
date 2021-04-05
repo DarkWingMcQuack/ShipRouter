@@ -3,9 +3,20 @@
 #include <Range.hpp>
 #include <SphericalGrid.hpp>
 #include <nonstd/span.hpp>
+#include <utility>
 
 struct Edge
 {
+    Edge(NodeId source,
+         NodeId target,
+         Distance distance,
+         std::optional<std::pair<EdgeId, EdgeId>> shortcut_for)
+        : source(source),
+          target(target),
+          distance(distance),
+          shortcut_for(std::move(shortcut_for)) {}
+
+    NodeId source;
     NodeId target;
     Distance distance;
     std::optional<std::pair<EdgeId, EdgeId>> shortcut_for;
@@ -62,6 +73,9 @@ public:
 
     auto getDegree(NodeId node) const noexcept
         -> std::size_t;
+
+    auto getInverserEdgeId(EdgeId id) const noexcept
+        -> std::optional<EdgeId>;
 
 private:
     auto getSnapNodeCandidate(Latitude<Degree> lat,

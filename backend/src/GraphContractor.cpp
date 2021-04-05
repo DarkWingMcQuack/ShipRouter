@@ -60,7 +60,7 @@ auto GraphContractor::contract(NodeId node) noexcept
             if(dijkstra_.shortestPathSTGoesOverU(source, target, node)) {
                 auto distance = inner_edge.distance + outer_edge.distance;
                 auto recurse_pair = std::pair{outer_id, inner_id};
-                shortcuts[source].emplace_back(target, distance, recurse_pair);
+                shortcuts[source].emplace_back(source, target, distance, recurse_pair);
                 counter++;
             }
         }
@@ -81,7 +81,7 @@ auto GraphContractor::countObsoleteEdges(NodeId node) const noexcept
                          std::end(edge_ids),
                          [this](auto id) {
                              const auto& edge = graph_.getEdge(id);
-                             auto destination = edge.target_;
+                             auto destination = edge.target;
 
                              return !graph_.isAlreadyContracted(destination);
                          })

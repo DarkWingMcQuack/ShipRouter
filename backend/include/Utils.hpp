@@ -39,3 +39,4 @@ constexpr static inline auto UNREACHABLE = std::numeric_limits<Distance>::max();
 constexpr static inline auto NON_EXISTENT = std::numeric_limits<NodeId>::max();
 constexpr static inline auto NODE_NOT_SET = std::numeric_limits<NodeId>::max() - 1;
 constexpr static inline auto LEVEL_NOT_SET = std::numeric_limits<Level>::max();
+constexpr static inline auto EDGE_NOT_SET = std::numeric_limits<EdgeId>::max();
