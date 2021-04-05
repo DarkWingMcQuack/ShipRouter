@@ -13,6 +13,14 @@ IndependentSetCalculator::IndependentSetCalculator(const Graph& graph) noexcept
     std::iota(std::begin(nodes_),
               std::end(nodes_),
               0);
+
+    nodes_.erase(
+        std::remove_if(std::begin(nodes_),
+                       std::end(nodes_),
+                       [&](auto node) {
+                           return graph_.isLandNode(node);
+                       }),
+        std::end(nodes_));
 }
 
 auto IndependentSetCalculator::hasAnotherSet() const noexcept
@@ -33,9 +41,7 @@ auto IndependentSetCalculator::calculateNextSet() noexcept
     sortNodesByDegree();
 
     for(auto n : nodes_) {
-        if(visited_[n]
-           or graph_.isAlreadyContracted(n)
-           or graph_.isLandNode(n)) {
+        if(visited_[n] or graph_.isAlreadyContracted(n)) {
             continue;
         }
 
