@@ -39,15 +39,21 @@ private:
     auto extractPath(NodeId source,
                      NodeId top_node,
                      NodeId target) const noexcept
-        -> std::optional<Path>;
+        -> Path;
 
-    auto extractSourcePath(NodeId source,
-                           NodeId top_node) const noexcept
-        -> std::optional<Path>;
+    auto extractSourcePathWrapped(NodeId source,
+                                  NodeId top_node) const noexcept
+        -> std::vector<EdgeId>;
 
-    auto extractTargetPath(NodeId target,
-                           NodeId top_node) const noexcept
-        -> std::optional<Path>;
+    auto extractTargetPathWrapped(NodeId source,
+                                  NodeId top_node) const noexcept
+        -> std::vector<EdgeId>;
+
+    auto unwrapFromSource(std::vector<EdgeId> ids) const noexcept
+        -> Path;
+
+    auto unwrapToTarget(std::vector<EdgeId> ids) const noexcept
+        -> Path;
 
 private:
     const Graph& graph_;

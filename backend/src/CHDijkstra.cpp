@@ -46,47 +46,125 @@ auto CHDijkstra::findRoute(NodeId source, NodeId target) noexcept
     auto distance = forward_distances_[top_node]
         + backward_distances_[top_node];
 
-    auto path_opt = extractPath(source, top_node, target);
+    auto path = extractPath(source, top_node, target);
 
-    if(!path_opt) {
-        return std::nullopt;
-    }
-
-    return std::pair{
-        std::move(path_opt.value()),
-        distance};
+    return std::pair{std::move(path),
+                     distance};
 }
 
 auto CHDijkstra::extractPath(NodeId source,
                              NodeId top_node,
                              NodeId target) const noexcept
-    -> std::optional<Path>
+    -> Path
 {
-    auto source_to_top_opt = extractSourcePath(source, top_node);
-    auto top_to_target_opt = extractTargetPath(target, top_node);
+    auto source_to_top_wrapped = extractSourcePathWrapped(source, top_node);
+    auto top_to_target_wrapped = extractTargetPathWrapped(target, top_node);
 
-    if(!source_to_top_opt or !top_to_target_opt) {
-        return std::nullopt;
-    }
-
-    auto source_to_top = std::move(source_to_top_opt.value());
-    auto top_to_target = std::move(top_to_target_opt.value());
+    auto source_to_top = unwrapFromSource(std::move(source_to_top_wrapped));
+    auto top_to_target = unwrapToTarget(std::move(top_to_target_wrapped));
 
     return concat(std::move(source_to_top),
                   std::move(top_to_target));
 }
 
 
-auto CHDijkstra::extractSourcePath(NodeId source,
-                                   NodeId top_node) const noexcept
-    -> std::optional<Path>
+auto CHDijkstra::extractSourcePathWrapped(NodeId source,
+                                          NodeId top_node) const noexcept
+    -> std::vector<EdgeId>
 {
+    std::vector<EdgeId> ids;
+    while(top_node != source) {
+        auto id = forward_best_ingoing_[top_node];
+        ids.emplace_back(ids);
+
+        const auto& edge = graph_.getEdge(id);
+
+        top_node = edge.source;
+    }
+
+    std::reverse(std::begin(ids),
+                 std::end(ids));
+
+    return ids;
 }
 
-auto CHDijkstra::extractTargetPath(NodeId target,
-                                   NodeId top_node) const noexcept
-    -> std::optional<Path>
+
+auto CHDijkstra::extractTargetPathWrapped(NodeId target,
+                                          NodeId top_node) const noexcept
+    -> std::vector<EdgeId>
 {
+    std::vector<EdgeId> ids;
+    while(top_node != target) {
+        auto id = backward_best_ingoing_[top_node];
+        ids.emplace_back(ids);
+
+        const auto& edge = graph_.getEdge(id);
+
+        top_node = edge.source;
+    }
+
+    return ids;
+}
+
+auto CHDijkstra::unwrapFromSource(std::vector<EdgeId> ids) const noexcept
+    -> Path
+{
+    if(ids.empty()) {
+        return Path{};
+    }
+
+    Path path;
+
+    while(!ids.empty()) {
+        auto next = ids.back();
+        ids.pop_back();
+
+        const auto& edge = graph_.getEdge(next);
+
+        if(edge.shortcut_for) {
+            auto [left, right] = edge.shortcut_for.value();
+
+            ids.emplace_back(left);
+            ids.emplace_back(right);
+        } else {
+            path.emplace_back(edge.target);
+            path.emplace_back(edge.source);
+        }
+    }
+
+    std::reverse(std::begin(path),
+                 std::end(path));
+
+    return path;
+}
+
+auto CHDijkstra::unwrapToTarget(std::vector<EdgeId> ids) const noexcept
+    -> Path
+{
+    if(ids.empty()) {
+        return Path{};
+    }
+
+    Path path;
+
+    while(!ids.empty()) {
+        auto next = ids.back();
+        ids.pop_back();
+
+        const auto& edge = graph_.getEdge(next);
+
+        if(edge.shortcut_for) {
+            auto [left, right] = edge.shortcut_for.value();
+
+            ids.emplace_back(left);
+            ids.emplace_back(right);
+        } else {
+            path.emplace_back(edge.target);
+            path.emplace_back(edge.source);
+        }
+    }
+
+    return path;
 }
 
 auto CHDijkstra::resetForward() noexcept
