@@ -2,6 +2,7 @@
 #include <Graph.hpp>
 #include <GraphContractor.hpp>
 #include <IndependentSetCalculator.hpp>
+#include <fmt/core.h>
 #include <numeric>
 
 
@@ -15,7 +16,7 @@ auto GraphContractor::fullyContractGraph() noexcept
 {
     IndependentSetCalculator is_calculator{graph_};
 
-    Level current_level = 1;
+    Level current_level = 0;
     while(is_calculator.hasAnotherSet()) {
         auto independent_set = is_calculator.calculateNextSet();
         auto contraction_result = contractSet(independent_set);
@@ -23,6 +24,12 @@ auto GraphContractor::fullyContractGraph() noexcept
         graph_.rebuildWith(std::move(contraction_result.shortcuts),
                            contraction_result.contracted_nodes,
                            current_level++);
+
+        fmt::print("contracted {} new nodes with level: {}\n",
+                   independent_set.size(),
+                   current_level - 1);
+
+        fmt::print("graph has: {} nodes and {} edges\n", graph_.size(), graph_.edges_.size());
     }
 }
 
@@ -59,7 +66,8 @@ auto GraphContractor::contract(NodeId node) noexcept
 
             if(dijkstra_.shortestPathSTGoesOverU(source, target, node)) {
                 auto distance = inner_edge.distance + outer_edge.distance;
-                auto recurse_pair = std::pair{outer_id, inner_id};
+                auto back_edge = graph_.getInverserEdgeId(outer_id).value();
+                auto recurse_pair = std::pair{back_edge, inner_id};
                 shortcuts[source].emplace_back(source, target, distance, recurse_pair);
                 counter++;
             }
@@ -68,7 +76,8 @@ auto GraphContractor::contract(NodeId node) noexcept
 
     auto edge_diff = counter - countObsoleteEdges(node);
 
-    return NodeContractionResult{std::move(shortcuts), edge_diff};
+    return NodeContractionResult{std::move(shortcuts),
+                                 edge_diff};
 }
 
 
