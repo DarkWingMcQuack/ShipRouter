@@ -107,6 +107,13 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
 }
 
 
+auto Graph::getDegree(NodeId node) const noexcept
+    -> std::size_t
+{
+    return getEdgeIdsOf(node).size();
+}
+
+
 auto Graph::getInverserEdgeId(EdgeId id) const noexcept
     -> std::optional<EdgeId>
 {

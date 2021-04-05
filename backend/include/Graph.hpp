@@ -100,6 +100,7 @@ private:
 
 
 private:
+    friend class GraphContractor;
     std::vector<std::size_t> ns_;
     std::vector<std::size_t> ms_;
 
