@@ -1,5 +1,6 @@
 #include <Dijkstra.hpp>
 #include <Environment.hpp>
+#include <GraphContractor.hpp>
 #include <PBFExtractor.hpp>
 #include <ServiceManager.hpp>
 #include <SphericalGrid.hpp>
@@ -62,7 +63,12 @@ auto main() -> int
     std::cout << "filtering land nodes..." << std::endl;
     grid.filter(polygons);
 
-    Graph graph{std::move(grid)};
+    Graph pre_graph{std::move(grid)};
+
+    GraphContractor contractor{std::move(pre_graph)};
+    contractor.fullyContractGraph();
+
+    auto graph = std::move(contractor.getGraph());
 
 
     //handle sigint such that the user can stop the server
