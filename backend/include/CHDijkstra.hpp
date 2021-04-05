@@ -41,6 +41,14 @@ private:
                      NodeId target) const noexcept
         -> std::optional<Path>;
 
+    auto extractSourcePath(NodeId source,
+                           NodeId top_node) const noexcept
+        -> std::optional<Path>;
+
+    auto extractTargetPath(NodeId target,
+                           NodeId top_node) const noexcept
+        -> std::optional<Path>;
+
 private:
     const Graph& graph_;
     std::vector<Distance> forward_distances_;

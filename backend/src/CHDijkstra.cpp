@@ -62,6 +62,31 @@ auto CHDijkstra::extractPath(NodeId source,
                              NodeId target) const noexcept
     -> std::optional<Path>
 {
+    auto source_to_top_opt = extractSourcePath(source, top_node);
+    auto top_to_target_opt = extractTargetPath(target, top_node);
+
+    if(!source_to_top_opt or !top_to_target_opt) {
+        return std::nullopt;
+    }
+
+    auto source_to_top = std::move(source_to_top_opt.value());
+    auto top_to_target = std::move(top_to_target_opt.value());
+
+    return concat(std::move(source_to_top),
+                  std::move(top_to_target));
+}
+
+
+auto CHDijkstra::extractSourcePath(NodeId source,
+                                   NodeId top_node) const noexcept
+    -> std::optional<Path>
+{
+}
+
+auto CHDijkstra::extractTargetPath(NodeId target,
+                                   NodeId top_node) const noexcept
+    -> std::optional<Path>
+{
 }
 
 auto CHDijkstra::resetForward() noexcept
