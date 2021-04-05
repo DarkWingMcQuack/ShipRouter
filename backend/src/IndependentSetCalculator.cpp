@@ -33,7 +33,9 @@ auto IndependentSetCalculator::calculateNextSet() noexcept
     sortNodesByDegree();
 
     for(auto n : nodes_) {
-        if(visited_[n] or graph_.isAlreadyContracted(n)) {
+        if(visited_[n]
+           or graph_.isAlreadyContracted(n)
+           or graph_.isLandNode(n)) {
             continue;
         }
 
@@ -47,10 +49,12 @@ auto IndependentSetCalculator::calculateNextSet() noexcept
 
             if(!visited_[neig]) {
                 touched_.emplace_back(neig);
-				visited_[neig] = true;
+                visited_[neig] = true;
             }
         }
     }
+
+    cleanup();
 
     return independent_set;
 }
