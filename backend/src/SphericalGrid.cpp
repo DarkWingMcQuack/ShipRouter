@@ -265,7 +265,7 @@ auto SphericalGrid::filter(const std::vector<Polygon>& polygons) noexcept
                        const auto lat = lats_[idx];
                        const auto lng = lngs_[idx];
 
-                       if(lat < -78.76779175784321) {
+                       if(lat < -79.0) {
                            return false;
                        }
 
