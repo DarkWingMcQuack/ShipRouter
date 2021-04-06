@@ -3,24 +3,41 @@
 #include <GraphContractor.hpp>
 #include <IndependentSetCalculator.hpp>
 #include <fmt/core.h>
+#include <iostream>
 #include <numeric>
 
 
 GraphContractor::GraphContractor(Graph&& graph) noexcept
     : graph_(std::move(graph)),
-      dijkstra_(graph_) {}
+      dijkstra_(graph_)
+{
+    fmt::print("constructed graph contractor\n");
+    std::cout << std::flush;
+}
 
 
 auto GraphContractor::fullyContractGraph() noexcept
     -> void
 {
+    fmt::print("initilaizing IS calculator...\n");
+    std::cout << std::flush;
     IndependentSetCalculator is_calculator{graph_};
+
+    fmt::print("done initilaizing IS calculator...\n");
+    std::cout << std::flush;
 
     Level current_level = 0;
     while(is_calculator.hasAnotherSet()) {
+        fmt::print("calculate independed set\n");
+        std::cout << std::flush;
         auto independent_set = is_calculator.calculateNextSet();
+
+        fmt::print("contract independed set\n");
+        std::cout << std::flush;
         auto contraction_result = contractSet(independent_set);
 
+        fmt::print("rebuild graph\n");
+        std::cout << std::flush;
         graph_.rebuildWith(std::move(contraction_result.shortcuts),
                            contraction_result.contracted_nodes,
                            current_level++);
@@ -28,9 +45,13 @@ auto GraphContractor::fullyContractGraph() noexcept
         fmt::print("contracted {} new nodes with level: {}\n",
                    independent_set.size(),
                    current_level - 1);
+        std::cout << std::flush;
 
         fmt::print("graph has: {} nodes and {} edges\n", graph_.size(), graph_.edges_.size());
+        std::cout << std::flush;
     }
+
+    fmt::print("done contracting graph\n");
 }
 
 

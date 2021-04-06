@@ -1,6 +1,7 @@
 #include <Graph.hpp>
 #include <IndependentSetCalculator.hpp>
 #include <OSMNode.hpp>
+#include <fmt/core.h>
 #include <numeric>
 #include <vector>
 
@@ -21,16 +22,21 @@ IndependentSetCalculator::IndependentSetCalculator(const Graph& graph) noexcept
                            return graph_.isLandNode(node);
                        }),
         std::end(nodes_));
+
+    fmt::print("build the independent set calculator\n");
 }
 
 auto IndependentSetCalculator::hasAnotherSet() const noexcept
     -> bool
 {
-    return std::any_of(std::begin(nodes_),
-                       std::end(nodes_),
-                       [&](auto node) {
-                           return !graph_.isAlreadyContracted(node);
-                       });
+    fmt::print("blaaa\n");
+    auto b = std::any_of(std::begin(nodes_),
+                         std::end(nodes_),
+                         [&](auto node) {
+                             return !graph_.isAlreadyContracted(node);
+                         });
+    fmt::print("blaaa\n");
+    return b;
 }
 
 auto IndependentSetCalculator::calculateNextSet() noexcept

@@ -69,6 +69,7 @@ auto Polygon::pointInPolygon(Latitude<Degree> lat, Longitude<Degree> lng) const 
     if(!pointInRectangle(lat, lng)) {
         return false;
     }
+
     const auto size = numberOfPoints();
     const auto range = utils::range(size);
     const auto p = Vector3D{lat.toRadian(), lng.toRadian()}

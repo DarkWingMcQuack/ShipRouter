@@ -62,13 +62,18 @@ auto main() -> int
 
     std::cout << "filtering land nodes..." << std::endl;
     grid.filter(polygons);
+	std::cout << "done filtering land nodes" << std::endl;
 
-    Graph graph{std::move(grid)};
+    Graph pre_graph{std::move(grid)};
 
-    // GraphContractor contractor{std::move(pre_graph)};
-    // contractor.fullyContractGraph();
+	std::cout << "contracting graph ..." << std::endl;
 
-    // auto graph = std::move(contractor.getGraph());
+    GraphContractor contractor{std::move(pre_graph)};
+    contractor.fullyContractGraph();
+
+	std::cout << "done contracting graph" << std::endl;
+
+    auto graph = std::move(contractor.getGraph());
 
 
     //handle sigint such that the user can stop the server

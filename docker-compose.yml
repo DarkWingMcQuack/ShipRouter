@@ -7,11 +7,11 @@ services:
     volumes:
       # provide the path to your own coastline file here
       # your file will be mounted to `/data.pbf`
-      - ./backend/data/planet-coastlines.pbf:/data.pbf
+      - ./backend/data/planet-coastlines.pbf.sec:/data.pbf
     environment:
       - PORT=9090
       - DATAFILE=/data.pbf
-      - NUMBER_OF_SPHERE_NODES=10000
+      - NUMBER_OF_SPHERE_NODES=1000
     ports:
       - "9090:9090"
 

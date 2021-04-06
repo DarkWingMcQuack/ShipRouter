@@ -16,7 +16,7 @@ Graph::Graph(SphericalGrid&& g)
       max_edge_id_(0)
 {
     for(auto id : utils::range(grid_.size())) {
-        if(!grid_.indexIsLand(id)) {
+        if(grid_.indexIsWater(id)) {
             auto neigs = grid_.getNeighbours(id);
 
             std::sort(std::begin(neigs),
@@ -33,7 +33,10 @@ Graph::Graph(SphericalGrid&& g)
                            [&](auto neig) {
                                auto [start_lat, start_lng] = grid_.idToLatLng(id);
                                auto [dest_lat, dest_lng] = grid_.idToLatLng(neig);
-                               auto distance = ::distanceBetween(start_lat, start_lng, dest_lat, dest_lng);
+                               auto distance = ::distanceBetween(start_lat,
+                                                                 start_lng,
+                                                                 dest_lat,
+                                                                 dest_lng);
 
                                return Edge{id, neig, static_cast<Distance>(distance), std::nullopt};
                            });
@@ -71,24 +74,23 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
     edges_.pop_back();
 
     for(auto id : utils::range(grid_.size())) {
-        if(grid_.indexIsLand(id)) {
-            continue;
-        }
-        auto edge_ids = getEdgeIdsOf(id);
+        if(!grid_.indexIsLand(id)) {
+            auto edge_ids = getEdgeIdsOf(id);
 
-        neigbours.insert(std::end(neigbours),
-                         std::begin(edge_ids),
-                         std::end(edge_ids));
+            neigbours.insert(std::end(neigbours),
+                             std::begin(edge_ids),
+                             std::end(edge_ids));
 
-        auto shortcut_iter = new_edges.find(id);
-        if(shortcut_iter != std::end(new_edges)) {
+            auto shortcut_iter = new_edges.find(id);
+            if(shortcut_iter != std::end(new_edges)) {
 
-            for([[maybe_unused]] auto&& _ : shortcut_iter->second) {
-                neigbours.emplace_back(max_edge_id_++);
+                for([[maybe_unused]] auto&& _ : shortcut_iter->second) {
+                    neigbours.emplace_back(max_edge_id_++);
+                }
+
+                edges_ = concat(std::move(edges_),
+                                std::move(shortcut_iter->second));
             }
-
-            edges_ = concat(std::move(edges_),
-                            std::move(shortcut_iter->second));
         }
 
         offset[id + 1] = neigbours.size();

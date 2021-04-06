@@ -157,6 +157,7 @@ auto SphericalGrid::getNeighbours(size_t m, size_t n) const noexcept
                 return indexIsLand(id);
             }),
         std::end(id_neighbours));
+
     return id_neighbours;
 }
 
@@ -266,14 +267,19 @@ auto SphericalGrid::filter(const std::vector<Polygon>& polygons) noexcept
                        const auto lng = lngs_[idx];
 
                        if(lat < -79.0) {
+                           fmt::print("{} is arctic node\n", idx);
                            return false;
                        }
 
-                       return std::none_of(std::cbegin(polygons),
-                                           std::cend(polygons),
-                                           [&](const Polygon& polygon) {
-                                               return polygon.pointInPolygon(lat, lng);
-                                           });
+                       auto bla = std::none_of(std::cbegin(polygons),
+                                               std::cend(polygons),
+                                               [&](const Polygon& polygon) {
+                                                   return polygon.pointInPolygon(lat, lng);
+                                               });
+                       if(!bla) {
+                           fmt::print("{} is inside of a polygon\n", idx);
+                       }
+                       return bla;
                    });
 }
 
