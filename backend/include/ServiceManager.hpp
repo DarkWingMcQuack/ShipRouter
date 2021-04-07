@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Dijkstra.hpp>
+#include <CHDijkstra.hpp>
 #include <Graph.hpp>
 #include <nlohmann/json.hpp>
 #include <pistache/endpoint.h>
@@ -28,7 +29,7 @@ private:
 
 private:
     Pistache::Rest::Router router_;
-    const Graph& grid_;
+    const Graph& graph_;
 
     std::mutex dijkstra_mtx_;
     Dijkstra dijkstra_;

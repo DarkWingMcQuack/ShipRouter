@@ -1,6 +1,10 @@
 #include <CHDijkstra.hpp>
 #include <Dijkstra.hpp>
 #include <Graph.hpp>
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+#include <iostream>
 #include <queue>
 
 
@@ -8,14 +12,17 @@ CHDijkstra::CHDijkstra(const Graph& graph) noexcept
     : graph_(graph),
       forward_distances_(graph_.size(), UNREACHABLE),
       forward_best_ingoing_(graph_.size(), EDGE_NOT_SET),
+      forward_already_settled_(graph_.size(), false),
       backward_distances_(graph_.size(), UNREACHABLE),
-      backward_best_ingoing_(graph_.size(), EDGE_NOT_SET) {}
+      backward_best_ingoing_(graph_.size(), EDGE_NOT_SET),
+      backward_already_settled_(graph_.size(), false) {}
 
 
 auto CHDijkstra::findDistance(NodeId source, NodeId target) noexcept
     -> Distance
 {
     fillForwardInfo(source);
+
     fillBackwardInfo(target);
 
     auto top_node_opt = findShortestPathCommonNode();
@@ -41,6 +48,7 @@ auto CHDijkstra::findRoute(NodeId source, NodeId target) noexcept
         return std::nullopt;
     }
 
+
     auto top_node = top_node_opt.value();
 
     auto distance = forward_distances_[top_node]
@@ -60,13 +68,15 @@ auto CHDijkstra::extractPath(NodeId source,
     auto source_to_top_wrapped = extractSourcePathWrapped(source, top_node);
     auto top_to_target_wrapped = extractTargetPathWrapped(target, top_node);
 
-    auto source_to_top = unwrapFromSource(std::move(source_to_top_wrapped));
-    auto top_to_target = unwrapToTarget(std::move(top_to_target_wrapped));
+    auto source_to_top = unwrap(std::move(source_to_top_wrapped));
+    auto top_to_target = unwrap(std::move(top_to_target_wrapped));
+
+	std::reverse(std::begin(top_to_target),
+				 std::end(top_to_target));
 
     return concat(std::move(source_to_top),
                   std::move(top_to_target));
 }
-
 
 auto CHDijkstra::extractSourcePathWrapped(NodeId source,
                                           NodeId top_node) const noexcept
@@ -75,19 +85,15 @@ auto CHDijkstra::extractSourcePathWrapped(NodeId source,
     std::vector<EdgeId> ids;
     while(top_node != source) {
         auto id = forward_best_ingoing_[top_node];
-        ids.emplace_back(ids);
+        ids.emplace_back(id);
 
         const auto& edge = graph_.getEdge(id);
 
         top_node = edge.source;
     }
 
-    std::reverse(std::begin(ids),
-                 std::end(ids));
-
     return ids;
 }
-
 
 auto CHDijkstra::extractTargetPathWrapped(NodeId target,
                                           NodeId top_node) const noexcept
@@ -96,7 +102,7 @@ auto CHDijkstra::extractTargetPathWrapped(NodeId target,
     std::vector<EdgeId> ids;
     while(top_node != target) {
         auto id = backward_best_ingoing_[top_node];
-        ids.emplace_back(ids);
+        ids.emplace_back(id);
 
         const auto& edge = graph_.getEdge(id);
 
@@ -106,15 +112,10 @@ auto CHDijkstra::extractTargetPathWrapped(NodeId target,
     return ids;
 }
 
-auto CHDijkstra::unwrapFromSource(std::vector<EdgeId> ids) const noexcept
+auto CHDijkstra::unwrap(std::vector<EdgeId> ids) const noexcept
     -> Path
 {
-    if(ids.empty()) {
-        return Path{};
-    }
-
     Path path;
-
     while(!ids.empty()) {
         auto next = ids.back();
         ids.pop_back();
@@ -124,43 +125,11 @@ auto CHDijkstra::unwrapFromSource(std::vector<EdgeId> ids) const noexcept
         if(edge.shortcut_for) {
             auto [left, right] = edge.shortcut_for.value();
 
-            ids.emplace_back(left);
             ids.emplace_back(right);
-        } else {
-            path.emplace_back(edge.target);
-            path.emplace_back(edge.source);
-        }
-    }
-
-    std::reverse(std::begin(path),
-                 std::end(path));
-
-    return path;
-}
-
-auto CHDijkstra::unwrapToTarget(std::vector<EdgeId> ids) const noexcept
-    -> Path
-{
-    if(ids.empty()) {
-        return Path{};
-    }
-
-    Path path;
-
-    while(!ids.empty()) {
-        auto next = ids.back();
-        ids.pop_back();
-
-        const auto& edge = graph_.getEdge(next);
-
-        if(edge.shortcut_for) {
-            auto [left, right] = edge.shortcut_for.value();
-
             ids.emplace_back(left);
-            ids.emplace_back(right);
         } else {
-            path.emplace_back(edge.target);
             path.emplace_back(edge.source);
+            path.emplace_back(edge.target);
         }
     }
 
@@ -173,6 +142,7 @@ auto CHDijkstra::resetForward() noexcept
     for(auto n : forward_touched_) {
         forward_distances_[n] = UNREACHABLE;
         forward_best_ingoing_[n] = EDGE_NOT_SET;
+        forward_already_settled_[n] = false;
     }
     forward_settled_.clear();
     forward_touched_.clear();
@@ -184,11 +154,11 @@ auto CHDijkstra::resetBackward() noexcept
     for(auto n : backward_touched_) {
         backward_distances_[n] = UNREACHABLE;
         backward_best_ingoing_[n] = EDGE_NOT_SET;
+        backward_already_settled_[n] = false;
     }
     backward_settled_.clear();
     backward_touched_.clear();
 }
-
 
 auto CHDijkstra::fillForwardInfo(NodeId source) noexcept
     -> void
@@ -201,16 +171,20 @@ auto CHDijkstra::fillForwardInfo(NodeId source) noexcept
     last_source_ = source;
     forward_touched_.emplace_back(source);
     forward_distances_[source] = 0;
-    forward_settled_.emplace_back(source);
 
     DijkstraQueue heap;
     heap.emplace(source, 0);
 
     while(!heap.empty()) {
-        auto [cost_to_current, current_node] = heap.top();
+        auto [current_node, cost_to_current] = heap.top();
         heap.pop();
 
+        if(forward_already_settled_[current_node]) {
+            continue;
+        }
+
         forward_settled_.emplace_back(current_node);
+        forward_already_settled_[current_node] = true;
 
         auto edge_ids = graph_.getEdgeIdsOf(current_node);
 
@@ -238,7 +212,6 @@ auto CHDijkstra::fillForwardInfo(NodeId source) noexcept
               std::end(forward_settled_));
 }
 
-
 auto CHDijkstra::fillBackwardInfo(NodeId target) noexcept
     -> void
 {
@@ -250,19 +223,22 @@ auto CHDijkstra::fillBackwardInfo(NodeId target) noexcept
     last_target_ = target;
     backward_touched_.emplace_back(target);
     backward_distances_[target] = 0;
-    backward_settled_.emplace_back(target);
 
     DijkstraQueue heap;
     heap.emplace(target, 0);
 
     while(!heap.empty()) {
-        auto [cost_to_current, current_node] = heap.top();
+        auto [current_node, cost_to_current] = heap.top();
         heap.pop();
 
+        if(backward_already_settled_[current_node]) {
+            continue;
+        }
+
         backward_settled_.emplace_back(current_node);
+        backward_already_settled_[current_node] = true;
 
         auto edge_ids = graph_.getEdgeIdsOf(current_node);
-
 
         for(auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
@@ -286,7 +262,6 @@ auto CHDijkstra::fillBackwardInfo(NodeId target) noexcept
     std::sort(std::begin(backward_settled_),
               std::end(backward_settled_));
 }
-
 
 auto CHDijkstra::findShortestPathCommonNode() noexcept
     -> std::optional<NodeId>

@@ -62,18 +62,47 @@ auto main() -> int
 
     std::cout << "filtering land nodes..." << std::endl;
     grid.filter(polygons);
-	std::cout << "done filtering land nodes" << std::endl;
+    std::cout << "done filtering land nodes" << std::endl;
 
     Graph pre_graph{std::move(grid)};
 
-	std::cout << "contracting graph ..." << std::endl;
+    std::cout << "contracting graph ..." << std::endl;
+
+    std::vector<NodeId> sources(10000);
+    std::vector<NodeId> targets(10000);
+
+    std::vector<Distance> dijkstra_distance(10000);
+
+    for(int i = 0; i < 10000; i++) {
+        sources[i] = rand() % pre_graph.size();
+        targets[i] = rand() % pre_graph.size();
+    }
+
+    Dijkstra d{pre_graph};
+    for(int i = 0; i < 10000; i++) {
+        dijkstra_distance[i] = d.findDistance(sources[i], targets[i]);
+    }
 
     GraphContractor contractor{std::move(pre_graph)};
     contractor.fullyContractGraph();
 
-	std::cout << "done contracting graph" << std::endl;
+    std::cout << "done contracting graph" << std::endl;
 
     auto graph = std::move(contractor.getGraph());
+
+
+    std::vector<Distance> ch_distance(10000);
+
+    CHDijkstra ch{graph};
+    for(int i = 0; i < 10000; i++) {
+        ch_distance[i] = ch.findDistance(sources[i], targets[i]);
+    }
+
+    for(int i = 0; i < 10000; i++) {
+        if(dijkstra_distance[i] != ch_distance[i]) {
+            fmt::print("ch: {}, dijksta: {}\n", ch_distance[i], dijkstra_distance[i]);
+        }
+    }
 
 
     //handle sigint such that the user can stop the server

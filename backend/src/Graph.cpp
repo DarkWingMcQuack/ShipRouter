@@ -2,6 +2,7 @@
 #include <Range.hpp>
 #include <SphericalGrid.hpp>
 #include <Vector3D.hpp>
+#include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <iostream>
 #include <nonstd/span.hpp>
@@ -59,8 +60,47 @@ Graph::Graph(SphericalGrid&& g)
     //insert dummy at the end
     edges_.emplace_back(NON_EXISTENT, NON_EXISTENT, UNREACHABLE, std::nullopt);
     neigbours_.emplace_back(max_edge_id_);
+
+    for(auto n : utils::range(grid_.size())) {
+        auto edge_ids = getEdgeIdsOf(n);
+
+        for(auto id : edge_ids) {
+
+            const auto& edge = getEdge(id);
+            auto source = edge.source;
+            auto target = edge.target;
+
+            if(source != n) {
+                fmt::print("WTF IS GOING ON SOURCE WAS NOT N\n");
+            }
+
+            if(!doesEdgeExist(target, source)) {
+                fmt::print("WTF IS GOING ON {}->{} EXISTS BUT BACKEDGE DOESNT\n", source, target);
+            }
+        }
+    }
 }
 
+
+auto Graph::getLevelOf(NodeId node) const noexcept
+    -> Level
+{
+    return level_[node];
+}
+
+
+auto Graph::doesEdgeExist(NodeId source, NodeId target) const noexcept
+    -> bool
+{
+    auto edge_ids = getEdgeIdsOf(source);
+    return std::any_of(std::begin(edge_ids),
+                       std::end(edge_ids),
+                       [&](auto id) {
+                           const auto& edge = getEdge(id);
+                           return edge.source == source
+                               and edge.target == target;
+                       });
+}
 
 auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
                         const std::vector<NodeId>& contracted_nodes,
@@ -98,6 +138,8 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
 
     for(auto n : contracted_nodes) {
         level_[n] = current_level;
+        fmt::print("set level of {} to {}\n", n, current_level);
+        std::cout << std::flush;
     }
 
     //insert dummy at the end

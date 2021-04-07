@@ -3,8 +3,10 @@
 #include <LatLng.hpp>
 #include <Polygon.hpp>
 #include <Utils.hpp>
+#include <Vector3D.hpp>
 #include <cmath>
 #include <vector>
+
 
 class SphericalGrid
 {

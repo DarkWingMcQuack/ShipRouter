@@ -49,10 +49,7 @@ private:
                                   NodeId top_node) const noexcept
         -> std::vector<EdgeId>;
 
-    auto unwrapFromSource(std::vector<EdgeId> ids) const noexcept
-        -> Path;
-
-    auto unwrapToTarget(std::vector<EdgeId> ids) const noexcept
+    auto unwrap(std::vector<EdgeId> ids) const noexcept
         -> Path;
 
 private:
@@ -62,10 +59,12 @@ private:
     std::vector<NodeId> forward_touched_;
     std::optional<NodeId> last_source_;
     std::vector<EdgeId> forward_best_ingoing_;
+    std::vector<bool> forward_already_settled_;
 
     std::vector<Distance> backward_distances_;
     std::vector<NodeId> backward_settled_;
     std::vector<NodeId> backward_touched_;
     std::optional<NodeId> last_target_;
     std::vector<EdgeId> backward_best_ingoing_;
+    std::vector<bool> backward_already_settled_;
 };

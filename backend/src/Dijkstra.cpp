@@ -71,16 +71,17 @@ auto Dijkstra::findRoute(NodeId source, NodeId target) noexcept
 
 auto Dijkstra::shortestPathSTGoesOverU(NodeId s,
                                        NodeId t,
-                                       NodeId u) noexcept
+                                       NodeId u,
+                                       Distance distance_over_u) noexcept
     -> bool
 {
-    if(isSettled(t)) {
-        return previous_nodes_[t] == u
-            and previous_nodes_[u] == s;
+    if(last_source_ == s and last_middle_node_ == u and isSettled(t)) {
+        return distances_[t] > distance_over_u;
     }
 
-    if(s != last_source_) {
+    if(s != last_source_ or last_middle_node_ != u) {
         last_source_ = s;
+        last_middle_node_ = u;
         reset();
         pq_.emplace(s, 0l);
         setDistanceTo(s, 0);
@@ -93,8 +94,11 @@ auto Dijkstra::shortestPathSTGoesOverU(NodeId s,
         settle(current_node);
 
         if(current_node == t) {
-            return previous_nodes_[t] == u
-                and previous_nodes_[u] == s;
+            return distance_over_u < current_dist;
+        }
+
+        if(current_dist > distance_over_u) {
+            return true;
         }
 
         //pop after the return, otherwise we loose a value
@@ -106,12 +110,12 @@ auto Dijkstra::shortestPathSTGoesOverU(NodeId s,
         for(auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
             const auto neig = edge.target;
-            const auto dist = edge.distance;
 
+            const auto dist = edge.distance;
             auto neig_dist = getDistanceTo(neig);
             const auto new_dist = current_dist + dist;
 
-            if(UNREACHABLE != current_dist and neig_dist > new_dist) {
+            if(neig != u and neig_dist > new_dist and !graph_.isAlreadyContracted(neig)) {
                 touched_.emplace_back(neig);
                 setDistanceTo(neig, new_dist);
                 pq_.emplace(neig, new_dist);
@@ -120,8 +124,9 @@ auto Dijkstra::shortestPathSTGoesOverU(NodeId s,
         }
     }
 
-    return previous_nodes_[t] == u
-        and previous_nodes_[u] == s;
+    //if t ist not found from s without u then there is no path without u
+    //and s-t-u is the unique shortest path
+    return true;
 }
 
 auto Dijkstra::findDistance(NodeId source, NodeId target) noexcept

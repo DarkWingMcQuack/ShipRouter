@@ -42,7 +42,13 @@ public:
 
     auto shortestPathSTGoesOverU(NodeId s,
                                  NodeId t,
-                                 NodeId u) noexcept
+                                 NodeId u,
+								 Distance distance_over_u) noexcept
+        -> bool;
+
+    auto cHShortcutCheck(NodeId s,
+                         NodeId u,
+                         NodeId t) noexcept
         -> bool;
 
 private:
@@ -78,4 +84,5 @@ private:
     std::vector<NodeId> previous_nodes_;
     DijkstraQueue pq_;
     std::optional<NodeId> last_source_;
+    std::optional<NodeId> last_middle_node_;
 };

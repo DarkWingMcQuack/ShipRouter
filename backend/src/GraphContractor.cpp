@@ -9,49 +9,28 @@
 
 GraphContractor::GraphContractor(Graph&& graph) noexcept
     : graph_(std::move(graph)),
-      dijkstra_(graph_)
-{
-    fmt::print("constructed graph contractor\n");
-    std::cout << std::flush;
-}
+      dijkstra_(graph_) {}
 
 
 auto GraphContractor::fullyContractGraph() noexcept
     -> void
 {
-    fmt::print("initilaizing IS calculator...\n");
-    std::cout << std::flush;
     IndependentSetCalculator is_calculator{graph_};
-
-    fmt::print("done initilaizing IS calculator...\n");
-    std::cout << std::flush;
-
     Level current_level = 0;
-    while(is_calculator.hasAnotherSet()) {
-        fmt::print("calculate independed set\n");
-        std::cout << std::flush;
-        auto independent_set = is_calculator.calculateNextSet();
 
-        fmt::print("contract independed set\n");
-        std::cout << std::flush;
+    while(is_calculator.hasAnotherSet()) {
+
+        auto independent_set = is_calculator.calculateNextSet();
         auto contraction_result = contractSet(independent_set);
 
-        fmt::print("rebuild graph\n");
-        std::cout << std::flush;
         graph_.rebuildWith(std::move(contraction_result.shortcuts),
                            contraction_result.contracted_nodes,
                            current_level++);
 
-        fmt::print("contracted {} new nodes with level: {}\n",
+        fmt::print("contracted {} nodes with level: {}\n",
                    independent_set.size(),
                    current_level - 1);
-        std::cout << std::flush;
-
-        fmt::print("graph has: {} nodes and {} edges\n", graph_.size(), graph_.edges_.size());
-        std::cout << std::flush;
     }
-
-    fmt::print("done contracting graph\n");
 }
 
 
@@ -80,16 +59,19 @@ auto GraphContractor::contract(NodeId node) noexcept
         for(auto inner_id : edge_ids) {
             const auto& inner_edge = graph_.getEdge(inner_id);
             const auto target = inner_edge.target;
+            const auto distance_over_u = outer_edge.distance + inner_edge.distance;
 
-            if(source == target or graph_.isAlreadyContracted(target)) {
+
+            if(graph_.isAlreadyContracted(target)) {
                 continue;
             }
 
-            if(dijkstra_.shortestPathSTGoesOverU(source, target, node)) {
+            if(dijkstra_.shortestPathSTGoesOverU(source, target, node, distance_over_u)) {
                 auto distance = inner_edge.distance + outer_edge.distance;
                 auto back_edge = graph_.getInverserEdgeId(outer_id).value();
                 auto recurse_pair = std::pair{back_edge, inner_id};
                 shortcuts[source].emplace_back(source, target, distance, recurse_pair);
+
                 counter++;
             }
         }
@@ -120,30 +102,19 @@ auto GraphContractor::countObsoleteEdges(NodeId node) const noexcept
 
 namespace {
 
-auto calculateAverageEdgeDiff(const std::vector<NodeContractionResult>& results) noexcept
-    -> double
+auto removeHalfOfTheResults(std::vector<NodeContractionResult>& results) noexcept
 {
-    auto sum = std::accumulate(std::cbegin(results),
-                               std::cend(results),
-                               0.,
-                               [](auto current, const auto& next) {
-                                   return current + next.edge_diff;
-                               });
+    if(results.size() < 10) {
+        return;
+    }
 
-    return sum / results.size();
-}
+    std::sort(std::begin(results),
+              std::end(results),
+              [](const auto& lhs, const auto& rhs) {
+                  return lhs.edge_diff > rhs.edge_diff;
+              });
 
-
-auto removeResultsWithEdgeDiffSmallerThan(std::vector<NodeContractionResult>& results,
-                                          double min_edge_diff) noexcept
-{
-    results.erase(
-        std::remove_if(std::begin(results),
-                       std::end(results),
-                       [&](auto r) {
-                           return r.edge_diff < min_edge_diff;
-                       }),
-        std::end(results));
+    results.resize(results.size() / 2);
 }
 
 } // namespace
@@ -160,10 +131,7 @@ auto GraphContractor::contractSet(const std::vector<NodeId>& independent_set) no
                        return contract(n);
                    });
 
-    auto average_edge_diff = calculateAverageEdgeDiff(contraction_results);
-
-    removeResultsWithEdgeDiffSmallerThan(contraction_results,
-                                         average_edge_diff);
+    removeHalfOfTheResults(contraction_results);
 
     std::unordered_map<NodeId, std::vector<Edge>> shortcuts;
     std::vector<NodeId> contracted_nodes;

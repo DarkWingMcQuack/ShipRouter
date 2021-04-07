@@ -12,10 +12,10 @@ using Pistache::Http::ResponseWriter;
 
 
 ServiceManager::ServiceManager(const Pistache::Address& address,
-                               const Graph& grid)
+                               const Graph& graph)
     : Pistache::Http::Endpoint(address),
-      grid_(grid),
-      dijkstra_(grid_)
+      graph_(graph),
+      dijkstra_(graph_)
 {
     auto opts = Pistache::Http::Endpoint::options()
                     .flags(Pistache::Tcp::Options::ReuseAddr)
@@ -30,9 +30,9 @@ ServiceManager::ServiceManager(const Pistache::Address& address,
 auto ServiceManager::snapNode(Latitude<Degree> lat, Longitude<Degree> lng) const
     -> nlohmann::json
 {
-    auto snapped = grid_.snapToGridNode(lat, lng);
-    auto new_lat = grid_.idToLat(snapped);
-    auto new_lng = grid_.idToLng(snapped);
+    auto snapped = graph_.snapToGridNode(lat, lng);
+    auto new_lat = graph_.idToLat(snapped);
+    auto new_lng = graph_.idToLng(snapped);
 
     nlohmann::json result;
 
@@ -46,7 +46,7 @@ auto ServiceManager::snapNode(Latitude<Degree> lat, Longitude<Degree> lng) const
 auto ServiceManager::getRoute(NodeId source, NodeId target)
     -> std::optional<nlohmann::json>
 {
-    if(!grid_.isValidId(source) or !grid_.isValidId(target)) {
+    if(!graph_.isValidId(source) or !graph_.isValidId(target)) {
         return std::nullopt;
     }
 
@@ -68,8 +68,8 @@ auto ServiceManager::getRoute(NodeId source, NodeId target)
     std::vector<double> lats;
     std::vector<double> lngs;
     for(auto i : path) {
-        auto lat = grid_.idToLat(i);
-        auto lng = grid_.idToLng(i);
+        auto lat = graph_.idToLat(i);
+        auto lng = graph_.idToLng(i);
         lats.emplace_back(lat);
         lngs.emplace_back(lng);
     }

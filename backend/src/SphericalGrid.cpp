@@ -3,6 +3,7 @@
 #include <Polygon.hpp>
 #include <Range.hpp>
 #include <SphericalGrid.hpp>
+#include <SeaRectangle.hpp>
 #include <Utils.hpp>
 #include <Vector3D.hpp>
 #include <algorithm>
@@ -102,7 +103,7 @@ auto SphericalGrid::getLowerNeighbours(size_t m, size_t n) const noexcept
     const auto m_idx_lower = (m + n_rows_ - 1) % n_rows_;
     const auto n_cols_in_this = nCols(m);
     const auto n_cols_in_lower = nCols(m_idx_lower);
-    const auto lower_row_ratio = static_cast<double>(n_cols_in_lower) / n_cols_in_this;
+    const auto lower_row_ratio = static_cast<long double>(n_cols_in_lower) / n_cols_in_this;
     for(int i = floor((static_cast<int>(n) - 1) * lower_row_ratio); i <= ceil((n + 1) * lower_row_ratio); i++) {
         neighbours.emplace_back(m_idx_lower, (i + n_cols_in_lower) % n_cols_in_lower);
     }
@@ -122,7 +123,7 @@ auto SphericalGrid::getUpperNeighbours(size_t m, size_t n) const noexcept
     const auto m_idx_upper = (m + 1) % n_rows_;
     const auto n_cols_in_this = nCols(m);
     const auto n_cols_in_upper = nCols(m_idx_upper);
-    const auto upper_row_ratio = static_cast<double>(n_cols_in_upper) / n_cols_in_this;
+    const auto upper_row_ratio = static_cast<long double>(n_cols_in_upper) / n_cols_in_this;
     for(int i = floor((static_cast<int>(n) - 1) * upper_row_ratio); i <= ceil((n + 1) * upper_row_ratio); i++) {
         neighbours.emplace_back(m_idx_upper, (i + n_cols_in_upper) % n_cols_in_upper);
     }
@@ -267,19 +268,25 @@ auto SphericalGrid::filter(const std::vector<Polygon>& polygons) noexcept
                        const auto lng = lngs_[idx];
 
                        if(lat < -79.0) {
-                           fmt::print("{} is arctic node\n", idx);
                            return false;
                        }
 
-                       auto bla = std::none_of(std::cbegin(polygons),
-                                               std::cend(polygons),
-                                               [&](const Polygon& polygon) {
-                                                   return polygon.pointInPolygon(lat, lng);
-                                               });
-                       if(!bla) {
-                           fmt::print("{} is inside of a polygon\n", idx);
+					   //check the predefined rectangles if
+					   //the node is definitly in the ocean
+					   //if so, the polygon check can be avoided 
+                       if(isDefinitlySea(lat, lng)) {
+                           return true;
                        }
-                       return bla;
+
+                       const auto p = Vector3D{lat.toRadian(),
+                                               lng.toRadian()}
+                                          .normalize();
+
+                       return std::none_of(std::cbegin(polygons),
+                                           std::cend(polygons),
+                                           [&](const Polygon& polygon) {
+                                               return polygon.pointInPolygon(lat, lng, p);
+                                           });
                    });
 }
 

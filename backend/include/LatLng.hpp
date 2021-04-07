@@ -26,7 +26,7 @@ public:
     constexpr auto operator=(Latitude&&) noexcept -> Latitude& = default;
     constexpr auto operator=(const Latitude&) -> Latitude& = default;
 
-    operator double() const
+    constexpr operator double() const
     {
         return value_;
     }
