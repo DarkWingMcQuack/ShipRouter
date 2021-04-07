@@ -2,6 +2,7 @@
 #include <Graph.hpp>
 #include <GraphContractor.hpp>
 #include <IndependentSetCalculator.hpp>
+#include <algorithm>
 #include <fmt/core.h>
 #include <iostream>
 #include <numeric>
@@ -10,7 +11,6 @@
 GraphContractor::GraphContractor(Graph&& graph) noexcept
     : graph_(std::move(graph)),
       dijkstra_(graph_) {}
-
 
 auto GraphContractor::fullyContractGraph() noexcept
     -> void
@@ -67,10 +67,9 @@ auto GraphContractor::contract(NodeId node) noexcept
             }
 
             if(dijkstra_.shortestPathSTGoesOverU(source, target, node, distance_over_u)) {
-                auto distance = inner_edge.distance + outer_edge.distance;
                 auto back_edge = graph_.getInverserEdgeId(outer_id).value();
                 auto recurse_pair = std::pair{back_edge, inner_id};
-                shortcuts[source].emplace_back(source, target, distance, recurse_pair);
+                shortcuts[source].emplace_back(source, target, distance_over_u, recurse_pair);
 
                 counter++;
             }
@@ -79,10 +78,10 @@ auto GraphContractor::contract(NodeId node) noexcept
 
     auto edge_diff = counter - countObsoleteEdges(node);
 
-    return NodeContractionResult{std::move(shortcuts),
+    return NodeContractionResult{node,
+                                 std::move(shortcuts),
                                  edge_diff};
 }
-
 
 auto GraphContractor::countObsoleteEdges(NodeId node) const noexcept
     -> std::int64_t
@@ -104,21 +103,17 @@ namespace {
 
 auto removeHalfOfTheResults(std::vector<NodeContractionResult>& results) noexcept
 {
-    if(results.size() < 10) {
-        return;
-    }
-
     std::sort(std::begin(results),
               std::end(results),
               [](const auto& lhs, const auto& rhs) {
-                  return lhs.edge_diff > rhs.edge_diff;
+                  return lhs.edge_diff < rhs.edge_diff;
               });
 
-    results.resize(results.size() / 2);
+    auto half_size = std::max(1ul, results.size() / 2);
+    results.resize(half_size);
 }
 
 } // namespace
-
 
 auto GraphContractor::contractSet(const std::vector<NodeId>& independent_set) noexcept
     -> IndependentSetContractionResult
@@ -136,19 +131,13 @@ auto GraphContractor::contractSet(const std::vector<NodeId>& independent_set) no
     std::unordered_map<NodeId, std::vector<Edge>> shortcuts;
     std::vector<NodeId> contracted_nodes;
 
-    auto counter = 0;
-    auto shortcuts_added = 0;
-
-    for(auto&& [sc, edgediff] : contraction_results) {
-        auto current_node = independent_set[counter++];
-
+    for(auto&& [current_node, sc, edgediff] : contraction_results) {
         for(auto&& [from, edges] : sc) {
             shortcuts[from].insert(std::end(shortcuts[from]),
                                    std::begin(edges),
                                    std::end(edges));
         }
         contracted_nodes.emplace_back(current_node);
-        shortcuts_added += shortcuts[current_node].size();
     }
 
     return IndependentSetContractionResult{std::move(shortcuts),

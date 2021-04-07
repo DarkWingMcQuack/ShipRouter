@@ -5,6 +5,7 @@
 
 struct NodeContractionResult
 {
+    NodeId contracted_node;
     std::unordered_map<NodeId, std::vector<Edge>> shortcuts;
     std::int64_t edge_diff;
 };

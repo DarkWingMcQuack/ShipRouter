@@ -138,8 +138,6 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
 
     for(auto n : contracted_nodes) {
         level_[n] = current_level;
-        fmt::print("set level of {} to {}\n", n, current_level);
-        std::cout << std::flush;
     }
 
     //insert dummy at the end
@@ -312,8 +310,6 @@ auto Graph::getSnapNodeCandidate(Latitude<Degree> lat,
     const auto [m, n] = grid_.sphericalToGrid(lat.toRadian(), lng.toRadian());
 
     const auto id = gridToId(m, n);
-
-    fmt::print("index: {}\n", id);
 
     std::vector<NodeId> candidates;
     std::vector<NodeId> touched_nodes;

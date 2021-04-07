@@ -2,8 +2,8 @@
 #include <LatLng.hpp>
 #include <Polygon.hpp>
 #include <Range.hpp>
-#include <SphericalGrid.hpp>
 #include <SeaRectangle.hpp>
+#include <SphericalGrid.hpp>
 #include <Utils.hpp>
 #include <Vector3D.hpp>
 #include <algorithm>
@@ -271,9 +271,13 @@ auto SphericalGrid::filter(const std::vector<Polygon>& polygons) noexcept
                            return false;
                        }
 
-					   //check the predefined rectangles if
-					   //the node is definitly in the ocean
-					   //if so, the polygon check can be avoided 
+                       if(lat > 83.706){
+                           return true;
+                       }
+
+                       //check the predefined rectangles if
+                       //the node is definitly in the ocean
+                       //if so, the polygon check can be avoided
                        if(isDefinitlySea(lat, lng)) {
                            return true;
                        }

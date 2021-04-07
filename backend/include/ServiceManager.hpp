@@ -32,5 +32,5 @@ private:
     const Graph& graph_;
 
     std::mutex dijkstra_mtx_;
-    Dijkstra dijkstra_;
+    CHDijkstra dijkstra_;
 };
