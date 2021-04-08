@@ -11,6 +11,17 @@ struct Degree{};
 template<class T>
 constexpr static inline auto is_tag = std::is_same_v<T, Radian> or std::is_same_v<T, Degree>;
 
+template<class T>
+constexpr auto modulo(T x, T y) noexcept -> T
+{
+    using Int = typename std::conditional<std::is_floating_point<T>::value, int, T>::type;
+
+    return std::is_floating_point<T>()
+        ? x - static_cast<long long>(x / y) * y
+        : static_cast<Int>(x) % static_cast<Int>(y);
+}
+
+
 template<class Tag>
 class Latitude
 {
@@ -50,7 +61,7 @@ public:
         -> std::enable_if_t<std::is_same_v<Q, Degree>,
                             Latitude<Degree>>
     {
-        return Latitude<Degree>{std::fmod(value_, 90) - 90};
+        return Latitude<Degree>{modulo(value_, 90.) - 90};
     }
 
 
@@ -98,7 +109,7 @@ public:
         -> std::enable_if_t<std::is_same_v<Q, Degree>,
                             Longitude<Degree>>
     {
-        return Longitude<Degree>{std::fmod(value_, 180) - 180};
+        return Longitude<Degree>{modulo(value_, 180.) - 180};
     }
 
     template<class Q = Tag>

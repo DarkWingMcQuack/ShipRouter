@@ -12,18 +12,6 @@
 #include <numeric>
 
 
-namespace {
-
-auto latLngTo3D(Latitude<Radian> lat, Longitude<Radian> lng) noexcept
-    -> std::tuple<double, double, double>
-{
-    return std::tuple{std::cos(lat.getValue()) * std::cos(lng.getValue()),
-                      std::cos(lat.getValue()) * std::sin(lng.getValue()),
-                      std::sin(lat.getValue())};
-}
-
-} // namespace
-
 Polygon::Polygon(const std::vector<OSMNode>& nodes) noexcept
 {
     const auto first = nodes.front();
@@ -46,15 +34,13 @@ Polygon::Polygon(const std::vector<OSMNode>& nodes) noexcept
         }
         auto lat = n.getLat().toRadian();
         auto lng = n.getLon().toRadian();
-        auto [x, y, z] = latLngTo3D(lat, lng);
-        auto lenght = std::sqrt(x * x + y * y + z * z);
-        x_.emplace_back(x / lenght);
-        y_.emplace_back(y / lenght);
-        z_.emplace_back(z / lenght);
+
+        points_.emplace_back(lat, lng);
     }
 }
 
-auto Polygon::pointInRectangle(Latitude<Degree> lat, Longitude<Degree> lng) const noexcept
+auto Polygon::pointInRectangle(const Latitude<Degree>& lat,
+                               const Longitude<Degree>& lng) const noexcept
     -> bool
 {
     return bottom_ <= lat
@@ -63,9 +49,9 @@ auto Polygon::pointInRectangle(Latitude<Degree> lat, Longitude<Degree> lng) cons
         and lng <= right_;
 }
 
-auto Polygon::pointInPolygon(Latitude<Degree> lat,
-							 Longitude<Degree> lng,
-							 const Vector3D& p) const noexcept
+auto Polygon::pointInPolygon(const Latitude<Degree>& lat,
+                             const Longitude<Degree>& lng,
+                             const Vector3D& p) const noexcept
     -> bool
 {
     if(!pointInRectangle(lat, lng)) {
@@ -74,20 +60,8 @@ auto Polygon::pointInPolygon(Latitude<Degree> lat,
 
     const auto size = numberOfPoints();
     const auto range = utils::range(size);
-    // const auto p = Vector3D{lat.toRadian(), lng.toRadian()}
-    //                    .normalize();
 
-    // get vectors from p to each vertex
-    std::vector<Vector3D> vec_to_vertex;
-    std::transform(std::begin(range),
-                   std::end(range),
-                   std::back_inserter(vec_to_vertex),
-                   [&](auto idx) {
-                       return p - Vector3D{x_[idx], y_[idx], z_[idx]};
-                   });
-
-
-    auto sum = std::transform_reduce(
+    const auto sum = std::transform_reduce(
         std::execution::unseq,
         std::begin(range),
         std::end(range),
@@ -96,8 +70,8 @@ auto Polygon::pointInPolygon(Latitude<Degree> lat,
             return current + next;
         },
         [&](auto idx) {
-            const auto& first = vec_to_vertex[idx % size];
-            const auto& second = vec_to_vertex[(idx + 1) % size];
+            const auto first = p - points_[idx % size];
+            const auto second = p - points_[(idx + 1) % size];
             return first.angleBetween(second, p);
         });
 
@@ -108,30 +82,15 @@ auto Polygon::pointInPolygon(Latitude<Degree> lat,
 }
 
 
-namespace {
-
-auto vec3DtoLatLong(double x, double y, double z) noexcept
-{
-    auto lat = std::atan2(z, std::sqrt(x * x + y * y));
-    auto lng = std::atan2(y, x);
-
-    return std::pair{Latitude<Radian>{lat},
-                     Longitude<Radian>{lng}};
-}
-
-} // namespace
-
 auto Polygon::getLatAndLng() const noexcept
     -> std::vector<std::pair<double, double>>
 {
     std::vector<std::pair<double, double>> ret_vec;
-    auto range = utils::range(numberOfPoints());
-
-    std::transform(std::begin(range),
-                   std::end(range),
+    std::transform(std::begin(points_),
+                   std::end(points_),
                    std::back_inserter(ret_vec),
-                   [&](auto idx) {
-                       auto [lat, lng] = vec3DtoLatLong(x_[idx], y_[idx], z_[idx]);
+                   [&](const auto& point) {
+                       auto [lat, lng] = point.toLatLng();
                        return std::pair{lat.toDegree().getValue(),
                                         lng.toDegree().getValue()};
                    });
@@ -142,7 +101,7 @@ auto Polygon::getLatAndLng() const noexcept
 auto Polygon::numberOfPoints() const noexcept
     -> std::size_t
 {
-    return x_.size();
+    return points_.size();
 }
 
 auto calculatePolygons(CoastlineLookup&& coastline_lookup,

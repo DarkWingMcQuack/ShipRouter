@@ -10,7 +10,7 @@
 class Vector3D
 {
 public:
-    Vector3D(Latitude<Radian> lat, Longitude<Radian> lng)
+    Vector3D(Latitude<Radian> lat, Longitude<Radian> lng) noexcept
         : x_(std::cos(lat.getValue()) * std::cos(lng.getValue())),
           y_(std::cos(lat.getValue()) * std::sin(lng.getValue())),
           z_(std::sin(lat.getValue())) {}
@@ -21,7 +21,7 @@ public:
     auto operator=(const Vector3D&) -> Vector3D& = default;
     auto operator=(Vector3D&&) -> Vector3D& = default;
 
-    constexpr Vector3D(double x, double y, double z)
+    constexpr Vector3D(double x, double y, double z) noexcept
         : x_(x), y_(y), z_(z) {}
 
     auto normalize() const noexcept
@@ -34,6 +34,16 @@ public:
         const auto z = z_ / l;
 
         return Vector3D{x, y, z};
+    }
+
+    auto toLatLng() const noexcept
+        -> std::pair<Latitude<Radian>, Longitude<Radian>>
+    {
+        auto lat = std::atan2(z_, std::sqrt(x_ * x_ + y_ * y_));
+        auto lng = std::atan2(y_, x_);
+
+        return std::pair{Latitude<Radian>{lat},
+                         Longitude<Radian>{lng}};
     }
 
     constexpr auto dotProduct(const Vector3D& other) const noexcept

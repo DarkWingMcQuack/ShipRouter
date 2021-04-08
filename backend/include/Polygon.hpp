@@ -12,8 +12,8 @@ class Polygon
 public:
     Polygon(const std::vector<OSMNode>& nodes) noexcept;
 
-    auto pointInPolygon(Latitude<Degree> lat,
-                        Longitude<Degree> lng,
+    auto pointInPolygon(const Latitude<Degree>& lat,
+                        const Longitude<Degree>& lng,
                         const Vector3D& point) const noexcept
         -> bool;
 
@@ -24,14 +24,12 @@ public:
         -> std::vector<std::pair<double, double>>;
 
 private:
-    auto pointInRectangle(Latitude<Degree> lat,
-                          Longitude<Degree> lng) const noexcept
+    auto pointInRectangle(const Latitude<Degree>& lat,
+                          const Longitude<Degree>& lng) const noexcept
         -> bool;
 
 private:
-    std::vector<double> x_;
-    std::vector<double> y_;
-    std::vector<double> z_;
+    std::vector<Vector3D> points_;
     Latitude<Degree> top_;
     Longitude<Degree> left_;
     Latitude<Degree> bottom_;
