@@ -80,10 +80,28 @@ constexpr auto SEA_RECTANGLES = std::array{
         Longitude<Degree>{260.859375}},
 
     SeaRectangle{
+        Latitude<Degree>{62.34960927573042},
+        Longitude<Degree>{318.60351562499994},
+        Latitude<Degree>{40.111688665595956},
+        Longitude<Degree>{345.498046875}},
+
+    SeaRectangle{
+        Latitude<Degree>{57.136239319177434},
+        Longitude<Degree>{307.79296875},
+        Latitude<Degree>{40.111688665595956},
+        Longitude<Degree>{348.662109375}},
+
+    SeaRectangle{
         Latitude<Degree>{-28.459033019728043},
         Longitude<Degree>{186.6796875},
         Latitude<Degree>{-68.13885164925573},
         Longitude<Degree>{277.91015625}},
+
+    SeaRectangle{
+        Latitude<Degree>{22.43134015636061},
+        Longitude<Degree>{483.662109375},
+        Latitude<Degree>{15.114552871944115},
+        Longitude<Degree>{494.912109375}},
 };
 
 constexpr auto isDefinitlySea(Latitude<Degree> lat, Longitude<Degree> lng)
