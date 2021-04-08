@@ -27,7 +27,7 @@ auto GraphContractor::fullyContractGraph() noexcept
                            contraction_result.contracted_nodes,
                            current_level++);
 
-        fmt::print("contracted {} nodes with level: {}\n",
+        fmt::print("contracted {} nodes in level: {}\n",
                    independent_set.size(),
                    current_level - 1);
     }
@@ -101,16 +101,25 @@ auto GraphContractor::countObsoleteEdges(NodeId node) const noexcept
 
 namespace {
 
-auto removeHalfOfTheResults(std::vector<NodeContractionResult>& results) noexcept
+auto removeBiggerThanMedian(std::vector<NodeContractionResult>& results) noexcept
 {
-    std::sort(std::begin(results),
-              std::end(results),
-              [](const auto& lhs, const auto& rhs) {
-                  return lhs.edge_diff < rhs.edge_diff;
-              });
+    auto n = results.size() / 2;
+    std::nth_element(std::begin(results),
+                     std::begin(results) + n,
+                     std::end(results),
+                     [](const auto& lhs, const auto& rhs) {
+                         return lhs.edge_diff < rhs.edge_diff;
+                     });
 
-    auto half_size = std::max(1ul, results.size() / 2);
-    results.resize(half_size);
+    auto median = results[n].edge_diff;
+
+    results.erase(
+        std::remove_if(std::begin(results),
+                       std::end(results),
+                       [&](const auto& result) {
+                           return result.edge_diff > median;
+                       }),
+        std::end(results));
 }
 
 } // namespace
@@ -126,7 +135,7 @@ auto GraphContractor::contractSet(const std::vector<NodeId>& independent_set) no
                        return contract(n);
                    });
 
-    removeHalfOfTheResults(contraction_results);
+    removeBiggerThanMedian(contraction_results);
 
     std::unordered_map<NodeId, std::vector<Edge>> shortcuts;
     std::vector<NodeId> contracted_nodes;

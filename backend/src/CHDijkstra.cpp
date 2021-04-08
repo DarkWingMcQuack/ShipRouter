@@ -1,9 +1,6 @@
 #include <CHDijkstra.hpp>
 #include <Dijkstra.hpp>
 #include <Graph.hpp>
-#include <fmt/core.h>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
 #include <iostream>
 #include <queue>
 
@@ -65,17 +62,39 @@ auto CHDijkstra::extractPath(NodeId source,
                              NodeId target) const noexcept
     -> Path
 {
+    if(source == target) {
+        return Path{source};
+    }
+
     auto source_to_top_wrapped = extractSourcePathWrapped(source, top_node);
     auto top_to_target_wrapped = extractTargetPathWrapped(target, top_node);
 
-    auto source_to_top = unwrap(std::move(source_to_top_wrapped));
-    auto top_to_target = unwrap(std::move(top_to_target_wrapped));
+    auto source_to_top = unwrap(std::move(source_to_top_wrapped),
+                                source,
+                                top_node,
+                                target);
+    auto top_to_target = unwrap(std::move(top_to_target_wrapped),
+                                source,
+                                top_node,
+                                target);
 
-	std::reverse(std::begin(top_to_target),
-				 std::end(top_to_target));
+    std::reverse(std::begin(top_to_target),
+                 std::end(top_to_target));
 
-    return concat(std::move(source_to_top),
-                  std::move(top_to_target));
+
+    if(source == top_node or target == top_node) {
+        return concat(Path{source},
+                      std::move(source_to_top),
+                      std::move(top_to_target),
+                      Path{target});
+    }
+
+
+    return concat(Path{source},
+                  std::move(source_to_top),
+                  Path{top_node},
+                  std::move(top_to_target),
+                  Path{target});
 }
 
 auto CHDijkstra::extractSourcePathWrapped(NodeId source,
@@ -88,7 +107,6 @@ auto CHDijkstra::extractSourcePathWrapped(NodeId source,
         ids.emplace_back(id);
 
         const auto& edge = graph_.getEdge(id);
-
         top_node = edge.source;
     }
 
@@ -112,7 +130,10 @@ auto CHDijkstra::extractTargetPathWrapped(NodeId target,
     return ids;
 }
 
-auto CHDijkstra::unwrap(std::vector<EdgeId> ids) const noexcept
+auto CHDijkstra::unwrap(std::vector<EdgeId> ids,
+                        NodeId source,
+                        NodeId top_node,
+                        NodeId target) const noexcept
     -> Path
 {
     Path path;
@@ -121,15 +142,17 @@ auto CHDijkstra::unwrap(std::vector<EdgeId> ids) const noexcept
         ids.pop_back();
 
         const auto& edge = graph_.getEdge(next);
+        auto node = edge.target;
 
         if(edge.shortcut_for) {
             auto [left, right] = edge.shortcut_for.value();
 
             ids.emplace_back(right);
             ids.emplace_back(left);
-        } else {
-            path.emplace_back(edge.source);
-            path.emplace_back(edge.target);
+        } else if(node != source
+                  and node != top_node
+                  and node != target) {
+            path.emplace_back(node);
         }
     }
 

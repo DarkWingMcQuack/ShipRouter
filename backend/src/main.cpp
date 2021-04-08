@@ -68,46 +68,12 @@ auto main() -> int
 
     std::cout << "contracting graph ..." << std::endl;
 
-    std::vector<NodeId> sources(10000);
-    std::vector<NodeId> targets(10000);
-
-    std::vector<std::optional<std::pair<Path, Distance>>> dijkstra_distance(10000);
-
-    for(int i = 0; i < 10000; i++) {
-        sources[i] = rand() % pre_graph.size();
-        targets[i] = rand() % pre_graph.size();
-    }
-
-    Dijkstra d{pre_graph};
-    for(int i = 0; i < 10000; i++) {
-        dijkstra_distance[i] = d.findRoute(sources[i], targets[i]);
-    }
-
     GraphContractor contractor{std::move(pre_graph)};
     contractor.fullyContractGraph();
 
     std::cout << "done contracting graph" << std::endl;
 
     auto graph = std::move(contractor.getGraph());
-
-
-    std::vector<std::optional<std::pair<Path, Distance>>> ch_distance(10000);
-
-    CHDijkstra ch{graph};
-    for(int i = 0; i < 10000; i++) {
-        ch_distance[i] = ch.findRoute(sources[i], targets[i]);
-    }
-
-    for(int i = 0; i < 10000; i++) {
-        if(dijkstra_distance[i]
-           and ch_distance[i]
-		   and dijkstra_distance[i].value().second != ch_distance[i].value().second ) {
-            auto [ch_path, ch_d] = ch_distance[i].value();
-            auto [dij_path, dij_d] = dijkstra_distance[i].value();
-            fmt::print("ch_path({}): {}\n", ch_d, fmt::join(ch_path, ","));
-            fmt::print("dij_path({}): {}\n", dij_d, fmt::join(dij_path, ","));
-        }
-    }
 
 
     //handle sigint such that the user can stop the server

@@ -49,7 +49,10 @@ private:
                                   NodeId top_node) const noexcept
         -> std::vector<EdgeId>;
 
-    auto unwrap(std::vector<EdgeId> ids) const noexcept
+    auto unwrap(std::vector<EdgeId> ids,
+                NodeId source,
+                NodeId top_node,
+                NodeId target) const noexcept
         -> Path;
 
 private:

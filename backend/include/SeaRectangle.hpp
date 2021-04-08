@@ -5,17 +5,17 @@
 class SeaRectangle
 {
 public:
-    constexpr SeaRectangle(Latitude<Degree> top_left_lat,
-                           Longitude<Degree> top_left_lng,
-                           Latitude<Degree> bottom_right_lat,
-                           Longitude<Degree> bottom_right_lng) noexcept
-        : top_left_lat_(top_left_lat),
-          top_left_lng_(top_left_lng),
-          bottom_right_lat_(bottom_right_lat),
-          bottom_right_lng_(bottom_right_lng) {}
+    SeaRectangle(Latitude<Degree> top_left_lat,
+                 Longitude<Degree> top_left_lng,
+                 Latitude<Degree> bottom_right_lat,
+                 Longitude<Degree> bottom_right_lng) noexcept
+        : top_left_lat_(top_left_lat.normalizeDegree()),
+          top_left_lng_(top_left_lng.normalizeDegree()),
+          bottom_right_lat_(bottom_right_lat.normalizeDegree()),
+          bottom_right_lng_(bottom_right_lng.normalizeDegree()) {}
 
-    constexpr auto isIn(Latitude<Degree> lat,
-                        Longitude<Degree> lng) noexcept
+    auto isIn(Latitude<Degree> lat,
+              Longitude<Degree> lng) noexcept
     {
         return top_left_lat_ > lat
             and top_left_lng_ < lng
@@ -30,7 +30,7 @@ private:
     Longitude<Degree> bottom_right_lng_;
 };
 
-constexpr auto SEA_RECTANGLES = std::array{
+auto SEA_RECTANGLES = std::array{
     SeaRectangle{
         Latitude<Degree>{49.724479188712984},
         Longitude<Degree>{-201.796875},
@@ -128,7 +128,7 @@ constexpr auto SEA_RECTANGLES = std::array{
         Longitude<Degree>{494.912109375}},
 };
 
-constexpr auto isDefinitlySea(Latitude<Degree> lat, Longitude<Degree> lng)
+inline auto isDefinitlySea(Latitude<Degree> lat, Longitude<Degree> lng)
 {
     for(auto rec : SEA_RECTANGLES) {
         if(rec.isIn(lat, lng)) {
