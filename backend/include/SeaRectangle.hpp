@@ -98,6 +98,30 @@ constexpr auto SEA_RECTANGLES = std::array{
         Longitude<Degree>{277.91015625}},
 
     SeaRectangle{
+        Latitude<Degree>{-25.720735134412095},
+        Longitude<Degree>{34.716796875},
+        Latitude<Degree>{-45.70617928533083},
+        Longitude<Degree>{76.904296875}},
+
+    SeaRectangle{
+        Latitude<Degree>{10.055402736564236},
+        Longitude<Degree>{-134.12109375},
+        Latitude<Degree>{-26.11598592533351},
+        Longitude<Degree>{-92.46093749999999}},
+
+    SeaRectangle{
+        Latitude<Degree>{-8.407168163601076},
+        Longitude<Degree>{-34.62890625},
+        Latitude<Degree>{-15.623036831528252},
+        Longitude<Degree>{11.6015625}},
+
+    SeaRectangle{
+        Latitude<Degree>{-17.056784609942543},
+        Longitude<Degree>{-28.388671875},
+        Latitude<Degree>{10.458984375},
+        Longitude<Degree>{-36.52729481454623}},
+
+    SeaRectangle{
         Latitude<Degree>{22.43134015636061},
         Longitude<Degree>{483.662109375},
         Latitude<Degree>{15.114552871944115},
