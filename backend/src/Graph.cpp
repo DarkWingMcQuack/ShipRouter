@@ -129,7 +129,7 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
         offset[id + 1] = neigbours.size();
     }
 
-	offset.shrink_to_fit();
+    offset.shrink_to_fit();
 
     for(auto n : contracted_nodes) {
         level_[n] = current_level;
@@ -298,6 +298,16 @@ auto Graph::getGridNeigboursOf(std::size_t m, std::size_t n) const noexcept
     return concat(getUpperGridNeigboursOf(m, n),
                   getLowerGridNeigboursOf(m, n),
                   getRowGridNeigboursOf(m, n));
+}
+
+
+auto Graph::areOneSameRow(NodeId first, NodeId second) const noexcept
+    -> bool
+{
+    auto [m1, _1] = grid_.idToGrid(first);
+    auto [m2, _2] = grid_.idToGrid(second);
+
+    return m1 == m2;
 }
 
 auto Graph::getSnapNodeCandidate(Latitude<Degree> lat,

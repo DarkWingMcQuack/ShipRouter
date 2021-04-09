@@ -30,6 +30,7 @@ auto GraphContractor::fullyContractGraph() noexcept
         fmt::print("contracted {} nodes in level: {}\n",
                    independent_set.size(),
                    current_level - 1);
+        std::cout << std::flush;
     }
 }
 
@@ -63,13 +64,19 @@ auto GraphContractor::contract(NodeId node) noexcept
             const auto& inner_edge = graph_.getEdge(inner_id);
             const auto target = inner_edge.target;
             const auto distance_over_u = outer_edge.distance + inner_edge.distance;
+            const auto source_target_row_same = graph_.areOneSameRow(source, target);
+            const auto node_source_row_same = graph_.areOneSameRow(source, node);
+            const auto s_u_t_same_row = source_target_row_same and node_source_row_same;
 
 
-            if(graph_.isAlreadyContracted(target) or target == node) {
+            if(graph_.isAlreadyContracted(target)
+               or target == node
+               or (source_target_row_same and not node_source_row_same)) {
                 continue;
             }
 
-            if(dijkstra_.shortestPathSTGoesOverU(source, target, node, distance_over_u)) {
+            if(s_u_t_same_row
+               or dijkstra_.shortestPathSTGoesOverU(source, target, node, distance_over_u)) {
 
                 auto first_back_edge = graph_.getInverserEdgeId(outer_id);
                 auto second_back_edge = graph_.getInverserEdgeId(inner_id);

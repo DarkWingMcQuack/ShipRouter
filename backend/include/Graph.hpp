@@ -57,6 +57,9 @@ public:
     auto doesEdgeExist(NodeId source, NodeId target) const noexcept
         -> bool;
 
+    auto areOneSameRow(NodeId first, NodeId second) const noexcept
+        -> bool;
+
     auto rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
                      const std::vector<NodeId>& contracted_nodes,
                      Level current_level) noexcept
