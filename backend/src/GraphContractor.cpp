@@ -50,8 +50,7 @@ auto GraphContractor::contract(NodeId node) noexcept
 
     const auto edge_ids = graph_.getEdgeIdsOf(node);
 
-    for(auto i = 0; i < edge_ids.size(); i++) {
-        auto outer_id = edge_ids[i];
+    for(auto outer_id : edge_ids) {
         const auto& outer_edge = graph_.getEdge(outer_id);
         const auto source = outer_edge.target;
 
@@ -59,8 +58,7 @@ auto GraphContractor::contract(NodeId node) noexcept
             continue;
         }
 
-        for(auto j = i + 1; j < edge_ids.size(); j++) {
-            const auto inner_id = edge_ids[j];
+        for(auto outer_id : edge_ids) {
 
             const auto& inner_edge = graph_.getEdge(inner_id);
             const auto target = inner_edge.target;
@@ -74,15 +72,16 @@ auto GraphContractor::contract(NodeId node) noexcept
             if(dijkstra_.shortestPathSTGoesOverU(source, target, node, distance_over_u)) {
 
                 auto first_back_edge = graph_.getInverserEdgeId(outer_id);
-                auto second_back_edge = graph_.getInverserEdgeId(inner_id);
+                // auto second_back_edge = graph_.getInverserEdgeId(inner_id);
 
                 auto first_recurse_pair = std::pair{first_back_edge, inner_id};
-                auto second_recurse_pair = std::pair{second_back_edge, outer_id};
+                // auto second_recurse_pair = std::pair{second_back_edge, outer_id};
 
                 shortcuts[source].emplace_back(source, target, distance_over_u, first_recurse_pair);
-                shortcuts[target].emplace_back(target, source, distance_over_u, second_recurse_pair);
+                // shortcuts[target].emplace_back(target, source, distance_over_u, second_recurse_pair);
 
-                counter += 2;
+                // counter += 2;
+                counter++;
             }
         }
     }
