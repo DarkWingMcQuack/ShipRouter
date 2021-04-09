@@ -75,6 +75,12 @@ public:
     auto size() const noexcept
         -> std::size_t;
 
+    auto findNearestNodeInUpperRow(std::size_t m, std::size_t n) const noexcept
+        -> std::pair<std::size_t, std::size_t>;
+
+    auto findNearestNodeInLowerRow(std::size_t m, std::size_t n) const noexcept
+        -> std::pair<std::size_t, std::size_t>;
+
 private:
     friend class Graph;
     double a_;
