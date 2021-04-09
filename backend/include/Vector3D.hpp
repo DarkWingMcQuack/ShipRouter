@@ -7,6 +7,35 @@
 #include <fmt/core.h>
 #include <tuple>
 
+//fast atan2 approximation
+//https://gist.github.com/volkansalma/2972237
+constexpr auto atan2_approx(double y, double x) noexcept
+    -> double
+{
+    //http://pubs.opengroup.org/onlinepubs/009695399/functions/atan2.html
+    //Volkan SALMA
+    const double oneqtr_pi = M_PI / 4.0;
+    const double thrqtr_pi = 3.0 * M_PI / 4.0;
+    double r = 0;
+    double angle = 0;
+    double abs_y = std::abs(y) + 1e-10f; // kludge to prevent 0/0 condition
+    if(x < 0.0) {
+        r = (x + abs_y) / (abs_y - x);
+        angle = thrqtr_pi;
+    } else {
+        r = (x - abs_y) / (x + abs_y);
+        angle = oneqtr_pi;
+    }
+
+    angle += (0.1963 * r * r - 0.9817) * r;
+
+    if(y < 0.0) {
+        return -angle; // negate if in quad III or IV
+    }
+
+    return angle;
+}
+
 class Vector3D
 {
 public:
@@ -36,11 +65,11 @@ public:
         return Vector3D{x, y, z};
     }
 
-    auto toLatLng() const noexcept
+    constexpr auto toLatLng() const noexcept
         -> std::pair<Latitude<Radian>, Longitude<Radian>>
     {
-        auto lat = std::atan2(z_, std::sqrt(x_ * x_ + y_ * y_));
-        auto lng = std::atan2(y_, x_);
+        auto lat = atan2_approx(z_, std::sqrt(x_ * x_ + y_ * y_));
+        auto lng = atan2_approx(y_, x_);
 
         return std::pair{Latitude<Radian>{lat},
                          Longitude<Radian>{lng}};
@@ -78,7 +107,7 @@ public:
     auto distanceTo(const Vector3D& other) const noexcept
         -> double
     {
-        const auto a = std::atan2(crossProduct(other).length(), dotProduct(other));
+        const auto a = atan2_approx(crossProduct(other).length(), dotProduct(other));
         return EARTH_RADIUS_IN_METERS * a;
     }
 
@@ -90,7 +119,7 @@ public:
         const auto sin_theta = crossProduct(other).length() * sign;
         const auto cos_theta = dotProduct(other);
 
-        return std::atan2(sin_theta, cos_theta);
+        return atan2_approx(sin_theta, cos_theta);
     }
 
 

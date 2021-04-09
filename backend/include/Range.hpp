@@ -14,85 +14,85 @@ struct RangeIterator
     using reference = Counter;
     using iterator_category = std::random_access_iterator_tag;
 
-    explicit RangeIterator(Counter current)
+    explicit constexpr RangeIterator(Counter current) noexcept
         : current_(current),
           start_(current)
     {
     }
 
-    auto operator++() -> RangeIterator&
+    constexpr auto operator++() noexcept -> RangeIterator&
     {
         ++current_;
         return *this;
     }
 
-    auto operator--() -> RangeIterator&
+    constexpr auto operator--() noexcept -> RangeIterator&
     {
         --current_;
         return *this;
     }
 
-    auto operator++(int) -> RangeIterator
+    constexpr auto operator++(int) noexcept -> RangeIterator
     {
 
-        auto ret = *this;
+        constexpr auto ret = *this;
         (*this)++;
         return ret;
     }
 
-    auto operator--(int) -> RangeIterator
+    constexpr auto operator--(int) noexcept -> RangeIterator
     {
-        auto ret = *this;
+        constexpr auto ret = *this;
         (*this)--;
         return ret;
     }
 
-    auto operator+(RangeIterator const& other) const
+    constexpr auto operator+(RangeIterator const& other) const noexcept
         -> difference_type
     {
         return current_ + other.current_;
     }
 
-    auto operator+(difference_type other) const
+    constexpr auto operator+(difference_type other) const noexcept
         -> RangeIterator
     {
         return RangeIterator{current_ + other};
     }
 
-    auto operator-(RangeIterator const& other) const
+    constexpr auto operator-(RangeIterator const& other) const noexcept
         -> difference_type
     {
         return current_ - other.current_;
     }
 
-    auto operator-(difference_type other) const
+    constexpr auto operator-(difference_type other) const noexcept
         -> RangeIterator
     {
         return RangeIterator{current_ - other};
     }
 
-    auto operator+=(RangeIterator const& other)
+    constexpr auto operator+=(RangeIterator const& other) noexcept
         -> RangeIterator&
     {
         current_ += other.current_;
         return *this;
     }
 
-    auto operator-=(RangeIterator const& other)
+    constexpr auto operator-=(RangeIterator const& other) noexcept
         -> RangeIterator&
     {
         current_ -= other.current_;
         return *this;
     }
 
-    auto operator+=(difference_type other)
+    constexpr auto operator+=(difference_type other) noexcept
         -> RangeIterator&
     {
         current_ += other;
         return *this;
     }
 
-    auto operator-=(difference_type other)
+    constexpr auto operator-=(difference_type other) noexcept
         -> RangeIterator&
     {
         current_ -= other;
@@ -100,55 +100,55 @@ struct RangeIterator
     }
 
 
-    auto operator==(RangeIterator const& other) const
+    constexpr auto operator==(RangeIterator const& other) const noexcept
         -> bool
     {
         return current_ == other.current_;
     }
 
-    auto operator!=(RangeIterator const& other) const
+    constexpr auto operator!=(RangeIterator const& other) const noexcept
         -> bool
     {
         return !(*this == other);
     }
 
-    auto operator<=(RangeIterator const& other) const
+    constexpr auto operator<=(RangeIterator const& other) const noexcept
         -> bool
     {
         return current_ <= other.current_;
     }
 
-    auto operator>=(RangeIterator const& other) const
+    constexpr auto operator>=(RangeIterator const& other) const noexcept
         -> bool
     {
         return current_ >= other.current_;
     }
 
-    auto operator<(RangeIterator const& other) const
+    constexpr auto operator<(RangeIterator const& other) const noexcept
         -> bool
     {
         return current_ < other.current_;
     }
 
-    auto operator>(RangeIterator const& other) const
+    constexpr auto operator>(RangeIterator const& other) const noexcept
         -> bool
     {
         return current_ > other.current_;
     }
 
-    auto operator*() const
+    constexpr auto operator*() const noexcept
         -> Counter
     {
         return current_;
     }
 
-    auto operator->() const
+    constexpr auto operator->() const noexcept
         -> Counter
     {
         return current_;
     }
 
-    auto operator[](int idx) const
+    constexpr auto operator[](int idx) const noexcept
         -> Counter
     {
         return start_ + idx;
@@ -168,30 +168,30 @@ struct RangeWrapper
                                                IteratorBase,
                                                std::reverse_iterator<IteratorBase>>::type;
 
-    RangeWrapper(Counter from, Counter to)
+    constexpr RangeWrapper(Counter from, Counter to) noexcept
         : begin_(from),
           end_(to)
     {
     }
 
-    auto begin() const
+    constexpr auto begin() const noexcept
         -> Iterator
     {
         return Iterator(IteratorBase(begin_));
     }
-    auto end() const
+    constexpr auto end() const noexcept
         -> Iterator
     {
         return Iterator(IteratorBase(end_));
     }
 
-    auto operator[](int idx) const
+    constexpr auto operator[](int idx) const noexcept
         -> Counter
     {
         return begin_ + idx;
     }
 
-    auto size() const
+    constexpr auto size() const noexcept
         -> std::size_t
     {
         return end_ - begin_;
@@ -208,28 +208,28 @@ private:
 namespace utils {
 
 template<typename Counter>
-auto range(Counter to)
+constexpr auto range(Counter to) noexcept
     -> impl::RangeWrapper<Counter, true>
 {
     return {0, to};
 }
 
 template<typename Counter>
-auto range(Counter from, Counter to)
+constexpr auto range(Counter from, Counter to) noexcept
     -> impl::RangeWrapper<Counter, true>
 {
     return {from, to};
 }
 
 template<typename Counter>
-auto reverseRange(Counter to)
+constexpr auto reverseRange(Counter to) noexcept
     -> impl::RangeWrapper<Counter, false>
 {
     return {to, 0};
 }
 
 template<typename Counter>
-auto reverseRange(Counter from, Counter to)
+constexpr auto reverseRange(Counter from, Counter to) noexcept
     -> impl::RangeWrapper<Counter, false>
 {
     return {to, from};

@@ -67,14 +67,12 @@ auto main() -> int
     Graph pre_graph{std::move(grid)};
 
     std::cout << "contracting graph ..." << std::endl;
-
     GraphContractor contractor{std::move(pre_graph)};
     contractor.fullyContractGraph();
 
     std::cout << "done contracting graph" << std::endl;
 
     auto graph = std::move(contractor.getGraph());
-
 
     //handle sigint such that the user can stop the server
     std::signal(SIGINT, handleUserInterrupt);

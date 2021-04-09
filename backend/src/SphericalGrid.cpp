@@ -256,42 +256,74 @@ auto SphericalGrid::indexIsLand(std::size_t idx) const noexcept
 auto SphericalGrid::filter(const std::vector<Polygon>& polygons) noexcept
     -> void
 {
-    const auto range = utils::range(lats_.size());
-    is_water_.resize(range.size());
+    is_water_.resize(lats_.size());
 
-    std::transform(std::execution::par,
-                   std::cbegin(range),
-                   std::cend(range),
-                   std::begin(is_water_),
-                   [&](auto idx) {
-                       const auto& lat = lats_[idx];
-                       const auto& lng = lngs_[idx];
+    for(auto i = 0; i < lats_.size(); i++) {
+        const auto& lat = lats_[i];
+        const auto& lng = lngs_[i];
 
-                       if(lat < -79.0) {
-                           return false;
-                       }
+        if(lat < -79.0) {
+		  is_water_[i] = false;
+		  continue;
+        }
 
-                       if(lat > 83.706){
-                           return true;
-                       }
+        if(lat > 83.706) {
+		  is_water_[i] = true;
+		  continue;
+        }
 
-                       //check the predefined rectangles if
-                       //the node is definitly in the ocean
-                       //if so, the polygon check can be avoided
-                       if(isDefinitlySea(lat, lng)) {
-                           return true;
-                       }
+        //check the predefined rectangles if
+        //the node is definitly in the ocean
+        //if so, the polygon check can be avoided
+        if(isDefinitlySea(lat, lng)) {
+		  is_water_[i] = true;
+		  continue;
+        }
 
-                       const auto p = Vector3D{lat.toRadian(),
-                                               lng.toRadian()}
-                                          .normalize();
+        const auto p = Vector3D{lat.toRadian(),
+                                lng.toRadian()}
+                           .normalize();
 
-                       return std::none_of(std::cbegin(polygons),
-                                           std::cend(polygons),
-                                           [&](const Polygon& polygon) {
-                                               return polygon.pointInPolygon(lat, lng, p);
-                                           });
-                   });
+        is_water_[i] = std::none_of(std::cbegin(polygons),
+                            std::cend(polygons),
+                            [&](const Polygon& polygon) {
+                                return polygon.pointInPolygon(lat, lng, p);
+                            });
+    }
+
+    // std::transform(std::execution::par,
+    //                std::cbegin(range),
+    //                std::cend(range),
+    //                std::begin(is_water_),
+    //                [&](auto idx) {
+    //                    const auto& lat = lats_[idx];
+    //                    const auto& lng = lngs_[idx];
+
+    //                    if(lat < -79.0) {
+    //                        return false;
+    //                    }
+
+    //                    if(lat > 83.706) {
+    //                        return true;
+    //                    }
+
+    //                    //check the predefined rectangles if
+    //                    //the node is definitly in the ocean
+    //                    //if so, the polygon check can be avoided
+    //                    if(isDefinitlySea(lat, lng)) {
+    //                        return true;
+    //                    }
+
+    //                    const auto p = Vector3D{lat.toRadian(),
+    //                                            lng.toRadian()}
+    //                                       .normalize();
+
+    //                    return std::none_of(std::cbegin(polygons),
+    //                                        std::cend(polygons),
+    //                                        [&](const Polygon& polygon) {
+    //                                            return polygon.pointInPolygon(lat, lng, p);
+    //                                        });
+    //                });
 }
 
 auto SphericalGrid::nCols(size_t m) const

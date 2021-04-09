@@ -19,6 +19,10 @@ Dijkstra::Dijkstra(const Graph& graph) noexcept
 auto Dijkstra::findRoute(NodeId source, NodeId target) noexcept
     -> std::optional<std::pair<Path, Distance>>
 {
+    if(graph_.isLandNode(source) or graph_.isLandNode(target)) {
+        return std::nullopt;
+    }
+
     if(source == last_source_
        and isSettled(target)
        and previous_nodes_[target] != NON_EXISTENT) {

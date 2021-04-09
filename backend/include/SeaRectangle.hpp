@@ -9,13 +9,13 @@ public:
                            const Longitude<Degree>& top_left_lng,
                            const Latitude<Degree>& bottom_right_lat,
                            const Longitude<Degree>& bottom_right_lng) noexcept
-        : top_left_lat_(top_left_lat.normalizeDegree()),
-          top_left_lng_(top_left_lng.normalizeDegree()),
-          bottom_right_lat_(bottom_right_lat.normalizeDegree()),
-          bottom_right_lng_(bottom_right_lng.normalizeDegree()) {}
+        : top_left_lat_(top_left_lat),
+          top_left_lng_(top_left_lng),
+          bottom_right_lat_(bottom_right_lat),
+          bottom_right_lng_(bottom_right_lng) {}
 
     constexpr auto isIn(const Latitude<Degree>& lat,
-                        const Longitude<Degree>& lng) noexcept
+                        const Longitude<Degree>& lng) const noexcept
     {
         return top_left_lat_ > lat
             and top_left_lng_ < lng
@@ -33,7 +33,7 @@ private:
 constexpr auto SEA_RECTANGLES = std::array{
     SeaRectangle{
         Latitude<Degree>{49.724479188712984},
-        Longitude<Degree>{-201.796875},
+        Longitude<Degree>{158.203125},
         Latitude<Degree>{29.84064389983441},
         Longitude<Degree>{-128.671875}},
 
@@ -57,45 +57,45 @@ constexpr auto SEA_RECTANGLES = std::array{
 
     SeaRectangle{
         Latitude<Degree>{58.95000823335702},
-        Longitude<Degree>{308.759765625},
+        Longitude<Degree>{-51.240234375},
         Latitude<Degree>{40.245991504199026},
-        Longitude<Degree>{345.5859375}},
+        Longitude<Degree>{-14.4140625}},
 
     SeaRectangle{
         Latitude<Degree>{18.312810846425442},
-        Longitude<Degree>{417.216796875},
+        Longitude<Degree>{57.216796875},
         Latitude<Degree>{-14.519780046326085},
-        Longitude<Degree>{430.6640625}},
+        Longitude<Degree>{70.6640625}},
 
     SeaRectangle{
         Latitude<Degree>{3.337953961416485},
-        Longitude<Degree>{438.3984375},
+        Longitude<Degree>{78.3984375},
         Latitude<Degree>{-63.78248603116501},
-        Longitude<Degree>{454.74609375}},
+        Longitude<Degree>{94.74609375}},
 
     SeaRectangle{
         Latitude<Degree>{15.961329081596647},
         Longitude<Degree>{173.14453125},
         Latitude<Degree>{10.833305983642491},
-        Longitude<Degree>{260.859375}},
+        Longitude<Degree>{-99.140625}},
 
     SeaRectangle{
         Latitude<Degree>{62.34960927573042},
-        Longitude<Degree>{318.60351562499994},
+        Longitude<Degree>{-41.396484375},
         Latitude<Degree>{40.111688665595956},
-        Longitude<Degree>{345.498046875}},
+        Longitude<Degree>{-14.501953125}},
 
     SeaRectangle{
         Latitude<Degree>{57.136239319177434},
-        Longitude<Degree>{307.79296875},
+        Longitude<Degree>{-52.20703125},
         Latitude<Degree>{40.111688665595956},
-        Longitude<Degree>{348.662109375}},
+        Longitude<Degree>{-11.337890625}},
 
     SeaRectangle{
         Latitude<Degree>{-28.459033019728043},
-        Longitude<Degree>{186.6796875},
+        Longitude<Degree>{-173.3203125},
         Latitude<Degree>{-68.13885164925573},
-        Longitude<Degree>{277.91015625}},
+        Longitude<Degree>{-82.08984375}},
 
     SeaRectangle{
         Latitude<Degree>{-25.720735134412095},
@@ -123,9 +123,9 @@ constexpr auto SEA_RECTANGLES = std::array{
 
     SeaRectangle{
         Latitude<Degree>{22.43134015636061},
-        Longitude<Degree>{483.662109375},
+        Longitude<Degree>{123.662109375},
         Latitude<Degree>{15.114552871944115},
-        Longitude<Degree>{494.912109375}},
+        Longitude<Degree>{134.912109375}},
 
     SeaRectangle{
         Latitude<Degree>{61.95961583829658},
@@ -137,7 +137,7 @@ constexpr auto SEA_RECTANGLES = std::array{
 constexpr auto isDefinitlySea(const Latitude<Degree>& lat,
                               const Longitude<Degree>& lng)
 {
-    for(auto rec : SEA_RECTANGLES) {
+    for(const auto& rec : SEA_RECTANGLES) {
         if(rec.isIn(lat, lng)) {
             return true;
         }
