@@ -96,7 +96,9 @@ auto SphericalGrid::getLowerNeighbours(size_t m, size_t n) const noexcept
     std::vector<std::pair<size_t, size_t>> neighbours;
     if(m == 0) {
         for(size_t i = 0; i < first_index_of_[1]; i++) {
-            neighbours.emplace_back(0, i);
+            if(i != n) {
+                neighbours.emplace_back(0, i);
+            }
         }
         return neighbours;
     }
@@ -116,7 +118,9 @@ auto SphericalGrid::getUpperNeighbours(size_t m, size_t n) const noexcept
     std::vector<std::pair<size_t, size_t>> neighbours;
     if(m == n_rows_ - 1) {
         for(size_t i = 0; i < first_index_of_[m + 1] - first_index_of_[m]; i++) {
-            neighbours.emplace_back(m, i);
+            if(i != n) {
+                neighbours.emplace_back(m, i);
+            }
         }
         return neighbours;
     }
@@ -271,7 +275,7 @@ auto SphericalGrid::filter(const std::vector<Polygon>& polygons) noexcept
                            return false;
                        }
 
-                       if(lat > 83.706){
+                       if(lat > 83.706) {
                            return true;
                        }
 
