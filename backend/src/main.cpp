@@ -32,54 +32,58 @@ static auto waitForUserInterrupt() noexcept
     lock.unlock();
 }
 
+static auto getEnvironment() noexcept
+    -> Environment
+{
+    auto environment_opt = loadEnv();
+    if(!environment_opt) {
+        std::cout << "the environment variables could not be understood" << std::endl;
+        std::cout << "using default values" << std::endl;
+
+        return Environment{9090,
+                           "../data/antarctica-latest.osm.pbf",
+                           10};
+    }
+
+    return environment_opt.value();
+}
+
 
 auto main() -> int
 {
+    auto environment = getEnvironment();
 
-    auto environment = [] {
-        auto environment_opt = loadEnv();
-        if(!environment_opt) {
-            std::cout << "the environment variables could not be understood" << std::endl;
-            std::cout << "using default values" << std::endl;
-
-            return Environment{9090,
-                               "../data/antarctica-latest.osm.pbf",
-                               10};
-        }
-
-        return environment_opt.value();
-    }();
-
-	utils::Timer t;
+    utils::Timer t;
 
     std::cout << "Parsing pbf file..." << std::endl;
     auto [nodes, coastlines] = parsePBFFile(environment.getDataFile());
-	std::cout << "parsed in " << t.elapsed() << "ms" << std::endl;
+    std::cout << "parsed in " << t.elapsed() << "ms" << std::endl;
 
 
     std::cout << "calculating polygons..." << std::endl;
 
-	t.reset();
+    t.reset();
     auto polygons = calculatePolygons(std::move(coastlines),
                                       std::move(nodes));
-	std::cout << "calculated in " << t.elapsed() << "ms" << std::endl;
+    std::cout << "calculated in " << t.elapsed() << "ms" << std::endl;
 
     std::cout << "building the grid..." << std::endl;
     SphericalGrid grid{environment.getNumberOfSphereNodes()};
 
     std::cout << "filtering land nodes..." << std::endl;
-	t.reset();
+    t.reset();
     grid.filter(polygons);
-	std::cout << "filtered in " << t.elapsed() << "ms" << std::endl;
+    std::cout << "filtered in " << t.elapsed() << "ms" << std::endl;
 
     Graph pre_graph{std::move(grid)};
 
     std::cout << "contracting graph ..." << std::endl;
-	t.reset();
+
+    t.reset();
     GraphContractor contractor{std::move(pre_graph)};
     contractor.fullyContractGraph();
 
-	std::cout << "contracted in " << t.elapsed() << "ms" << std::endl;
+    std::cout << "contracted in " << t.elapsed() << "ms" << std::endl;
 
     auto graph = std::move(contractor.getGraph());
 
