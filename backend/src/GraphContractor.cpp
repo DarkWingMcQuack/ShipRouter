@@ -50,12 +50,12 @@ auto GraphContractor::contract(NodeId node) noexcept
 
     const auto edge_ids = graph_.getEdgeIdsOf(node);
 
-    for(auto i = 0ul; i < edge_ids.size(); i++) {
+    for(auto i = 0; i < edge_ids.size(); i++) {
         auto outer_id = edge_ids[i];
         const auto& outer_edge = graph_.getEdge(outer_id);
         const auto source = outer_edge.target;
 
-        if(graph_.isAlreadyContracted(source)) {
+        if(graph_.isAlreadyContracted(source) or source == node) {
             continue;
         }
 
@@ -67,7 +67,7 @@ auto GraphContractor::contract(NodeId node) noexcept
             const auto distance_over_u = outer_edge.distance + inner_edge.distance;
 
 
-            if(graph_.isAlreadyContracted(target)) {
+            if(graph_.isAlreadyContracted(target) or target == node) {
                 continue;
             }
 
