@@ -57,24 +57,24 @@ Graph::Graph(SphericalGrid&& g)
         ms_.emplace_back(m);
     }
 
-    for(auto n : utils::range(grid_.size())) {
-        auto edge_ids = getEdgeIdsOf(n);
+    // for(auto n : utils::range(grid_.size())) {
+    //     auto edge_ids = getEdgeIdsOf(n);
 
-        for(auto id : edge_ids) {
+    //     for(auto id : edge_ids) {
 
-            const auto& edge = getEdge(id);
-            auto source = edge.source;
-            auto target = edge.target;
+    //         const auto& edge = getEdge(id);
+    //         auto source = edge.source;
+    //         auto target = edge.target;
 
-            if(source != n) {
-                fmt::print("WTF IS GOING ON SOURCE WAS NOT N\n");
-            }
+    //         if(source != n) {
+    //             fmt::print("WTF IS GOING ON SOURCE WAS NOT N\n");
+    //         }
 
-            if(!doesEdgeExist(target, source)) {
-                fmt::print("WTF IS GOING ON {}->{} EXISTS BUT BACKEDGE DOESNT\n", source, target);
-            }
-        }
-    }
+    //         if(!doesEdgeExist(target, source)) {
+    //             fmt::print("WTF IS GOING ON {}->{} EXISTS BUT BACKEDGE DOESNT\n", source, target);
+    //         }
+    //     }
+    // }
 }
 
 
@@ -128,6 +128,8 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
 
         offset[id + 1] = neigbours.size();
     }
+
+	offset.shrink_to_fit();
 
     for(auto n : contracted_nodes) {
         level_[n] = current_level;
