@@ -30,8 +30,6 @@ auto GraphContractor::fullyContractGraph() noexcept
         fmt::print("contracted {} nodes in level: {}\n",
                    independent_set.size(),
                    current_level - 1);
-
-        fmt::print("new graph has {} edges\n", graph_.numberOfEdges());
     }
 }
 
@@ -50,7 +48,7 @@ auto GraphContractor::contract(NodeId node) noexcept
 
     const auto edge_ids = graph_.getEdgeIdsOf(node);
 
-    for(auto i = 0; i < edge_ids.size(); i++) {
+    for(auto i = 0ul; i < edge_ids.size(); i++) {
         auto outer_id = edge_ids[i];
         const auto& outer_edge = graph_.getEdge(outer_id);
         const auto source = outer_edge.target;
@@ -112,23 +110,21 @@ auto GraphContractor::countObsoleteEdges(NodeId node) const noexcept
 
 namespace {
 
-auto removeBiggerThanMedian(std::vector<NodeContractionResult>& results) noexcept
+auto removeBiggerThanAvg(std::vector<NodeContractionResult>& results) noexcept
 {
-    auto n = results.size() / 2;
-    std::nth_element(std::begin(results),
-                     std::begin(results) + n,
-                     std::end(results),
-                     [](const auto& lhs, const auto& rhs) {
-                         return lhs.edge_diff < rhs.edge_diff;
-                     });
 
-    auto median = results[n].edge_diff;
+    auto avg = std::accumulate(std::begin(results),
+                               std::end(results), 0.0,
+                               [](auto current, const auto& res) {
+                                   return current + res.edge_diff;
+                               })
+        / results.size();
 
     results.erase(
         std::remove_if(std::begin(results),
                        std::end(results),
                        [&](const auto& result) {
-                           return result.edge_diff > median;
+                           return result.edge_diff > avg;
                        }),
         std::end(results));
 }
@@ -146,7 +142,7 @@ auto GraphContractor::contractSet(const std::vector<NodeId>& independent_set) no
                        return contract(n);
                    });
 
-    removeBiggerThanMedian(contraction_results);
+    removeBiggerThanAvg(contraction_results);
 
     std::unordered_map<NodeId, std::vector<Edge>> shortcuts;
     std::vector<NodeId> contracted_nodes;
