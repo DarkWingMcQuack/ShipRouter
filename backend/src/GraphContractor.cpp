@@ -58,7 +58,7 @@ auto GraphContractor::contract(NodeId node) noexcept
             continue;
         }
 
-        for(auto outer_id : edge_ids) {
+        for(auto inner_id : edge_ids) {
 
             const auto& inner_edge = graph_.getEdge(inner_id);
             const auto target = inner_edge.target;
