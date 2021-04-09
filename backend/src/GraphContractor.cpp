@@ -30,6 +30,8 @@ auto GraphContractor::fullyContractGraph() noexcept
         fmt::print("contracted {} nodes in level: {}\n",
                    independent_set.size(),
                    current_level - 1);
+
+        fmt::print("new graph has {} edges\n", graph_.numberOfEdges());
     }
 }
 
@@ -48,7 +50,7 @@ auto GraphContractor::contract(NodeId node) noexcept
 
     const auto edge_ids = graph_.getEdgeIdsOf(node);
 
-    for(auto i = 0; i < edge_ids.size(); i++) {
+    for(auto i = 0ul; i < edge_ids.size(); i++) {
         auto outer_id = edge_ids[i];
         const auto& outer_edge = graph_.getEdge(outer_id);
         const auto source = outer_edge.target;
@@ -71,8 +73,8 @@ auto GraphContractor::contract(NodeId node) noexcept
 
             if(dijkstra_.shortestPathSTGoesOverU(source, target, node, distance_over_u)) {
 
-                auto first_back_edge = graph_.getInverserEdgeId(outer_id).value();
-                auto second_back_edge = graph_.getInverserEdgeId(inner_id).value();
+                auto first_back_edge = graph_.getInverserEdgeId(outer_id);
+                auto second_back_edge = graph_.getInverserEdgeId(inner_id);
 
                 auto first_recurse_pair = std::pair{first_back_edge, inner_id};
                 auto second_recurse_pair = std::pair{second_back_edge, outer_id};

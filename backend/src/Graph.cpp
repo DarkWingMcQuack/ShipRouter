@@ -57,10 +57,6 @@ Graph::Graph(SphericalGrid&& g)
         ms_.emplace_back(m);
     }
 
-    //insert dummy at the end
-    edges_.emplace_back(NON_EXISTENT, NON_EXISTENT, UNREACHABLE, std::nullopt);
-    neigbours_.emplace_back(max_edge_id_);
-
     for(auto n : utils::range(grid_.size())) {
         auto edge_ids = getEdgeIdsOf(n);
 
@@ -110,9 +106,6 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
     std::vector<EdgeId> neigbours;
     std::vector<size_t> offset(grid_.size() + new_edges.size() + 1, 0);
 
-    //remove the dummy entry
-    edges_.pop_back();
-
     for(auto id : utils::range(grid_.size())) {
         if(!grid_.indexIsLand(id)) {
             auto edge_ids = getEdgeIdsOf(id);
@@ -140,10 +133,6 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
         level_[n] = current_level;
     }
 
-    //insert dummy at the end
-    edges_.emplace_back(NON_EXISTENT, NON_EXISTENT, UNREACHABLE, std::nullopt);
-    neigbours.emplace_back(max_edge_id_);
-
     neigbours_ = std::move(neigbours);
     offset_ = std::move(offset);
 }
@@ -155,9 +144,15 @@ auto Graph::getDegree(NodeId node) const noexcept
     return getEdgeIdsOf(node).size();
 }
 
+auto Graph::numberOfEdges() const noexcept
+    -> std::size_t
+{
+    return edges_.size();
+}
+
 
 auto Graph::getInverserEdgeId(EdgeId id) const noexcept
-    -> std::optional<EdgeId>
+    -> EdgeId
 {
     const auto& edge = getEdge(id);
     auto source = edge.source;
@@ -173,7 +168,7 @@ auto Graph::getInverserEdgeId(EdgeId id) const noexcept
         }
     }
 
-    return std::nullopt;
+    return EDGE_NOT_SET;
 }
 
 auto Graph::isAlreadyContracted(NodeId node) const noexcept

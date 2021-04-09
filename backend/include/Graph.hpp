@@ -51,6 +51,9 @@ public:
     auto size() const noexcept
         -> std::size_t;
 
+    auto numberOfEdges() const noexcept
+        -> std::size_t;
+
     auto doesEdgeExist(NodeId source, NodeId target) const noexcept
         -> bool;
 
@@ -78,7 +81,7 @@ public:
         -> std::size_t;
 
     auto getInverserEdgeId(EdgeId id) const noexcept
-        -> std::optional<EdgeId>;
+        -> EdgeId;
 
 private:
     auto getSnapNodeCandidate(Latitude<Degree> lat,

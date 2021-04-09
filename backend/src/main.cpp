@@ -4,6 +4,7 @@
 #include <PBFExtractor.hpp>
 #include <ServiceManager.hpp>
 #include <SphericalGrid.hpp>
+#include <Timer.hpp>
 #include <Vector3D.hpp>
 #include <csignal>
 #include <cstdint>
@@ -49,28 +50,36 @@ auto main() -> int
         return environment_opt.value();
     }();
 
+	utils::Timer t;
 
     std::cout << "Parsing pbf file..." << std::endl;
     auto [nodes, coastlines] = parsePBFFile(environment.getDataFile());
+	std::cout << "parsed in " << t.elapsed() << "ms" << std::endl;
+
+
     std::cout << "calculating polygons..." << std::endl;
 
+	t.reset();
     auto polygons = calculatePolygons(std::move(coastlines),
                                       std::move(nodes));
+	std::cout << "calculated in " << t.elapsed() << "ms" << std::endl;
 
     std::cout << "building the grid..." << std::endl;
     SphericalGrid grid{environment.getNumberOfSphereNodes()};
 
     std::cout << "filtering land nodes..." << std::endl;
+	t.reset();
     grid.filter(polygons);
-    std::cout << "done filtering land nodes" << std::endl;
+	std::cout << "filtered in " << t.elapsed() << "ms" << std::endl;
 
     Graph pre_graph{std::move(grid)};
 
     std::cout << "contracting graph ..." << std::endl;
+	t.reset();
     GraphContractor contractor{std::move(pre_graph)};
     contractor.fullyContractGraph();
 
-    std::cout << "done contracting graph" << std::endl;
+	std::cout << "contracted in " << t.elapsed() << "ms" << std::endl;
 
     auto graph = std::move(contractor.getGraph());
 
