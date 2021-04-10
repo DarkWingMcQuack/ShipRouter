@@ -228,7 +228,7 @@ auto CHDijkstra::fillForwardInfo(NodeId source) noexcept
                 return forward_distances_[neig] + cost < cost_to_current;
             });
 
-        if(!stall_on_demand_valid) {
+        if(stall_on_demand_valid) {
             continue;
         }
 
@@ -309,7 +309,7 @@ auto CHDijkstra::fillBackwardInfo(NodeId target) noexcept
                 return backward_distances_[neig] + cost < cost_to_current;
             });
 
-        if(!stall_on_demand_valid) {
+        if(stall_on_demand_valid) {
             continue;
         }
 
