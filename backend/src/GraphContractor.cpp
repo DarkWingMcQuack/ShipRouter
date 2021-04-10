@@ -65,7 +65,7 @@ auto GraphContractor::contract(NodeId node) noexcept
             const auto target = inner_edge.target;
             const auto distance_over_u = outer_edge.distance + inner_edge.distance;
 
-            if(graph_.isAlreadyContracted(target) or target == node){
+            if(graph_.isAlreadyContracted(target)){
                 continue;
             }
 

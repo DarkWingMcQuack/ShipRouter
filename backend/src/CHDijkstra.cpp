@@ -206,21 +206,51 @@ auto CHDijkstra::fillForwardInfo(NodeId source) noexcept
             continue;
         }
 
-        forward_settled_.emplace_back(current_node);
         forward_already_settled_[current_node] = true;
 
         auto edge_ids = graph_.getEdgeIdsOf(current_node);
 
+        auto stall_on_demand_valid = std::any_of(
+            std::begin(edge_ids),
+            std::end(edge_ids),
+            [&](auto id) {
+                const auto& edge = graph_.getEdge(id);
+                auto neig = edge.target;
+                auto cost = edge.distance;
+                if(graph_.getLevelOf(current_node) >= graph_.getLevelOf(neig)) {
+                    return false;
+                }
 
+                if(!forward_already_settled_[neig]) {
+                    return false;
+                }
+
+                return forward_distances_[neig] + cost < cost_to_current;
+            });
+
+        if(!stall_on_demand_valid) {
+            continue;
+        }
+
+
+        forward_settled_.emplace_back(current_node);
+
+
+        auto current_level = graph_.getLevelOf(current_node);
         for(auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
             auto neig = edge.target;
+            auto new_dist = edge.distance + cost_to_current;
 
-            if(graph_.getLevelOf(current_node) >= graph_.getLevelOf(neig)) {
+            if(current_level >= graph_.getLevelOf(neig)) {
                 continue;
             }
 
-            auto new_dist = edge.distance + cost_to_current;
+            //stall on demand
+            if(forward_already_settled_[neig]
+               and forward_distances_[neig] + edge.distance < cost_to_current) {
+                break;
+            }
 
             if(new_dist < forward_distances_[neig]) {
                 heap.emplace(neig, new_dist);
@@ -258,10 +288,33 @@ auto CHDijkstra::fillBackwardInfo(NodeId target) noexcept
             continue;
         }
 
-        backward_settled_.emplace_back(current_node);
+        auto edge_ids = graph_.getEdgeIdsOf(current_node);
         backward_already_settled_[current_node] = true;
 
-        auto edge_ids = graph_.getEdgeIdsOf(current_node);
+        auto stall_on_demand_valid = std::any_of(
+            std::begin(edge_ids),
+            std::end(edge_ids),
+            [&](auto id) {
+                const auto& edge = graph_.getEdge(id);
+                auto neig = edge.target;
+                auto cost = edge.distance;
+                if(graph_.getLevelOf(current_node) >= graph_.getLevelOf(neig)) {
+                    return false;
+                }
+
+                if(!backward_already_settled_[neig]) {
+                    return false;
+                }
+
+                return backward_distances_[neig] + cost < cost_to_current;
+            });
+
+        if(!stall_on_demand_valid) {
+            continue;
+        }
+
+        backward_settled_.emplace_back(current_node);
+
 
         for(auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
