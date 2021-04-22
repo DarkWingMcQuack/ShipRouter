@@ -20,6 +20,9 @@ public:
     auto findDistance(NodeId source, NodeId target) noexcept
         -> Distance;
 
+    [[nodiscard]] auto getAverageQPopsPerQuery() const noexcept
+        -> double;
+
 private:
     auto resetForward() noexcept
         -> void;
@@ -70,4 +73,7 @@ private:
     std::optional<NodeId> last_target_;
     std::vector<EdgeId> backward_best_ingoing_;
     std::vector<bool> backward_already_settled_;
+
+    std::size_t q_pops_ = 0;
+    std::size_t queries_ = 0;
 };

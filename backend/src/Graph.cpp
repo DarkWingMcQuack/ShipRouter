@@ -137,6 +137,18 @@ auto Graph::rebuildWith(std::unordered_map<NodeId, std::vector<Edge>> new_edges,
 
     neigbours_ = std::move(neigbours);
     offset_ = std::move(offset);
+
+    for(auto id : utils::range(grid_.size())) {
+        auto edge_ids = getEdgeIdsOf(id);
+
+        std::sort(std::begin(edge_ids),
+                  std::end(edge_ids),
+                  [&](auto lhs, auto rhs) {
+                      auto lhs_target = getEdge(lhs).target;
+                      auto rhs_target = getEdge(rhs).target;
+                      return level_[lhs_target] > level_[rhs_target];
+                  });
+    }
 }
 
 
@@ -222,6 +234,18 @@ auto Graph::getEdgeIdsOf(NodeId node) const noexcept
     const auto end_offset = offset_[node + 1];
     const auto* start = &neigbours_[start_offset];
     const auto* end = &neigbours_[end_offset];
+
+    return nonstd::span{start, end};
+}
+
+
+auto Graph::getEdgeIdsOf(NodeId node) noexcept
+    -> nonstd::span<EdgeId>
+{
+    const auto start_offset = offset_[node];
+    const auto end_offset = offset_[node + 1];
+    auto* start = &neigbours_[start_offset];
+    auto* end = &neigbours_[end_offset];
 
     return nonstd::span{start, end};
 }

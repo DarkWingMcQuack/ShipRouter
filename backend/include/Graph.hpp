@@ -45,6 +45,9 @@ public:
     auto getEdgeIdsOf(NodeId node) const noexcept
         -> nonstd::span<const EdgeId>;
 
+    auto getEdgeIdsOf(NodeId node) noexcept
+        -> nonstd::span<EdgeId>;
+
     auto getEdge(EdgeId) const noexcept
         -> const Edge&;
 

@@ -1,0 +1,10 @@
+\babel@toc {english}{}
+\beamer@sectionintoc {1}{Introduction}{3}{0}{1}
+\beamer@sectionintoc {2}{CH-Query}{8}{0}{2}
+\beamer@sectionintoc {3}{Optimizations}{21}{0}{3}
+\beamer@subsectionintoc {3}{1}{Caching Settled Nodes Lists}{22}{0}{3}
+\beamer@subsectionintoc {3}{2}{Independent Sets}{26}{0}{3}
+\beamer@subsectionintoc {3}{3}{Stall On Demand}{34}{0}{3}
+\beamer@sectionintoc {4}{Benchmarks}{36}{0}{4}
+\beamer@subsectionintoc {4}{1}{Heap-Pops}{38}{0}{4}
+\beamer@subsectionintoc {4}{2}{Querytime}{39}{0}{4}

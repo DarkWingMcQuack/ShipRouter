@@ -19,6 +19,7 @@ Dijkstra::Dijkstra(const Graph& graph) noexcept
 auto Dijkstra::findRoute(NodeId source, NodeId target) noexcept
     -> std::optional<std::pair<Path, Distance>>
 {
+    queries_++;
 
     if(source == last_source_
        and isSettled(target)
@@ -36,6 +37,7 @@ auto Dijkstra::findRoute(NodeId source, NodeId target) noexcept
 
     while(!pq_.empty()) {
         const auto [current_node, current_dist] = pq_.top();
+        q_pops_++;
 
         settle(current_node);
 
@@ -69,6 +71,12 @@ auto Dijkstra::findRoute(NodeId source, NodeId target) noexcept
     return extractShortestPath(source, target);
 }
 
+auto Dijkstra::getAverageQPopsPerQuery() const noexcept
+    -> double
+{
+    return static_cast<double>(q_pops_)
+        / static_cast<double>(queries_);
+}
 
 auto Dijkstra::shortestPathSTGoesOverU(NodeId s,
                                        NodeId t,
@@ -133,6 +141,7 @@ auto Dijkstra::shortestPathSTGoesOverU(NodeId s,
 auto Dijkstra::findDistance(NodeId source, NodeId target) noexcept
     -> Distance
 {
+    queries_++;
     return computeDistance(source, target);
 }
 
@@ -213,6 +222,7 @@ auto Dijkstra::computeDistance(NodeId source, NodeId target) noexcept
 
     while(!pq_.empty()) {
         const auto [current_node, current_dist] = pq_.top();
+        q_pops_++;
 
         settle(current_node);
 

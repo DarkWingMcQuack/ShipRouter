@@ -43,13 +43,11 @@ public:
     auto shortestPathSTGoesOverU(NodeId s,
                                  NodeId t,
                                  NodeId u,
-								 Distance distance_over_u) noexcept
+                                 Distance distance_over_u) noexcept
         -> bool;
 
-    auto cHShortcutCheck(NodeId s,
-                         NodeId u,
-                         NodeId t) noexcept
-        -> bool;
+    auto getAverageQPopsPerQuery() const noexcept
+        -> double;
 
 private:
     auto getDistanceTo(NodeId n) const noexcept
@@ -85,4 +83,7 @@ private:
     DijkstraQueue pq_;
     std::optional<NodeId> last_source_;
     std::optional<NodeId> last_middle_node_;
+
+    std::size_t q_pops_ = 0;
+    std::size_t queries_ = 0;
 };

@@ -18,8 +18,8 @@ CHDijkstra::CHDijkstra(const Graph& graph) noexcept
 auto CHDijkstra::findDistance(NodeId source, NodeId target) noexcept
     -> Distance
 {
+    queries_++;
     fillForwardInfo(source);
-
     fillBackwardInfo(target);
 
     auto top_node_opt = findShortestPathCommonNode();
@@ -36,6 +36,7 @@ auto CHDijkstra::findDistance(NodeId source, NodeId target) noexcept
 auto CHDijkstra::findRoute(NodeId source, NodeId target) noexcept
     -> std::optional<std::pair<Path, Distance>>
 {
+    queries_++;
     fillForwardInfo(source);
     fillBackwardInfo(target);
 
@@ -55,6 +56,14 @@ auto CHDijkstra::findRoute(NodeId source, NodeId target) noexcept
 
     return std::pair{std::move(path),
                      distance};
+}
+
+
+[[nodiscard]] auto CHDijkstra::getAverageQPopsPerQuery() const noexcept
+    -> double
+{
+    return static_cast<double>(q_pops_)
+        / static_cast<double>(queries_);
 }
 
 auto CHDijkstra::extractPath(NodeId source,
@@ -103,7 +112,7 @@ auto CHDijkstra::extractSourcePathWrapped(NodeId source,
 {
     std::vector<EdgeId> ids;
     while(top_node != source) {
-        auto id = forward_best_ingoing_[top_node];
+        const auto id = forward_best_ingoing_[top_node];
         ids.emplace_back(id);
 
         const auto& edge = graph_.getEdge(id);
@@ -119,7 +128,7 @@ auto CHDijkstra::extractTargetPathWrapped(NodeId target,
 {
     std::vector<EdgeId> ids;
     while(top_node != target) {
-        auto id = backward_best_ingoing_[top_node];
+        const auto id = backward_best_ingoing_[top_node];
         ids.emplace_back(id);
 
         const auto& edge = graph_.getEdge(id);
@@ -138,11 +147,11 @@ auto CHDijkstra::unwrap(std::vector<EdgeId> ids,
 {
     Path path;
     while(!ids.empty()) {
-        auto next = ids.back();
+        const auto next = ids.back();
         ids.pop_back();
 
         const auto& edge = graph_.getEdge(next);
-        auto node = edge.target;
+        const auto node = edge.target;
 
         if(edge.shortcut_for) {
             auto [left, right] = edge.shortcut_for.value();
@@ -199,8 +208,10 @@ auto CHDijkstra::fillForwardInfo(NodeId source) noexcept
     heap.emplace(source, 0);
 
     while(!heap.empty()) {
-        auto [current_node, cost_to_current] = heap.top();
+        const auto [current_node, cost_to_current] = heap.top();
         heap.pop();
+
+        q_pops_++;
 
         if(forward_already_settled_[current_node]) {
             continue;
@@ -208,49 +219,47 @@ auto CHDijkstra::fillForwardInfo(NodeId source) noexcept
 
         forward_already_settled_[current_node] = true;
 
-        auto edge_ids = graph_.getEdgeIdsOf(current_node);
+        const auto edge_ids = graph_.getEdgeIdsOf(current_node);
+        const auto current_level = graph_.getLevelOf(current_node);
 
-        auto stall_on_demand_valid = std::any_of(
-            std::begin(edge_ids),
-            std::end(edge_ids),
-            [&](auto id) {
-                const auto& edge = graph_.getEdge(id);
-                auto neig = edge.target;
-                auto cost = edge.distance;
-                if(graph_.getLevelOf(current_node) >= graph_.getLevelOf(neig)) {
-                    return false;
-                }
+        auto stall_on_demand_valid = false;
+        for(const auto id : edge_ids) {
+            const auto& edge = graph_.getEdge(id);
+            const auto neig = edge.target;
+            const auto cost = edge.distance;
 
-                if(!forward_already_settled_[neig]) {
-                    return false;
-                }
+            if(current_level >= graph_.getLevelOf(neig)) {
+                break;
+            }
 
-                return forward_distances_[neig] + cost < cost_to_current;
-            });
+            const auto current_dist_to_neig = forward_distances_[neig];
+
+            if(current_dist_to_neig == UNREACHABLE) {
+                continue;
+            }
+
+            if(current_dist_to_neig + cost < cost_to_current) {
+                stall_on_demand_valid = true;
+                break;
+            }
+        }
 
         if(stall_on_demand_valid) {
             continue;
         }
 
-
         forward_settled_.emplace_back(current_node);
 
-
-        auto current_level = graph_.getLevelOf(current_node);
-        for(auto id : edge_ids) {
+        for(const auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
-            auto neig = edge.target;
-            auto new_dist = edge.distance + cost_to_current;
+            const auto neig = edge.target;
+            const auto neig_level = graph_.getLevelOf(neig);
 
-            if(current_level >= graph_.getLevelOf(neig)) {
-                continue;
-            }
-
-            //stall on demand
-            if(forward_already_settled_[neig]
-               and forward_distances_[neig] + edge.distance < cost_to_current) {
+            if(current_level >= neig_level) {
                 break;
             }
+
+            const auto new_dist = edge.distance + cost_to_current;
 
             if(new_dist < forward_distances_[neig]) {
                 heap.emplace(neig, new_dist);
@@ -281,33 +290,40 @@ auto CHDijkstra::fillBackwardInfo(NodeId target) noexcept
     heap.emplace(target, 0);
 
     while(!heap.empty()) {
-        auto [current_node, cost_to_current] = heap.top();
+        const auto [current_node, cost_to_current] = heap.top();
         heap.pop();
+        q_pops_++;
 
         if(backward_already_settled_[current_node]) {
             continue;
         }
 
-        auto edge_ids = graph_.getEdgeIdsOf(current_node);
+        const auto edge_ids = graph_.getEdgeIdsOf(current_node);
+        const auto current_level = graph_.getLevelOf(current_node);
+
         backward_already_settled_[current_node] = true;
 
-        auto stall_on_demand_valid = std::any_of(
-            std::begin(edge_ids),
-            std::end(edge_ids),
-            [&](auto id) {
-                const auto& edge = graph_.getEdge(id);
-                auto neig = edge.target;
-                auto cost = edge.distance;
-                if(graph_.getLevelOf(current_node) >= graph_.getLevelOf(neig)) {
-                    return false;
-                }
+        auto stall_on_demand_valid = false;
+        for(const auto id : edge_ids) {
+            const auto& edge = graph_.getEdge(id);
+            const auto neig = edge.target;
+            const auto cost = edge.distance;
 
-                if(!backward_already_settled_[neig]) {
-                    return false;
-                }
+            if(current_level >= graph_.getLevelOf(neig)) {
+                break;
+            }
 
-                return backward_distances_[neig] + cost < cost_to_current;
-            });
+            const auto current_dist_to_neig = backward_distances_[neig];
+
+            if(current_dist_to_neig == UNREACHABLE) {
+                continue;
+            }
+
+            if(current_dist_to_neig + cost < cost_to_current) {
+                stall_on_demand_valid = true;
+                break;
+            }
+        }
 
         if(stall_on_demand_valid) {
             continue;
@@ -315,16 +331,16 @@ auto CHDijkstra::fillBackwardInfo(NodeId target) noexcept
 
         backward_settled_.emplace_back(current_node);
 
-
-        for(auto id : edge_ids) {
+        for(const auto id : edge_ids) {
             const auto& edge = graph_.getEdge(id);
-            auto neig = edge.target;
+            const auto neig = edge.target;
+            const auto neig_level = graph_.getLevelOf(neig);
 
-            if(graph_.getLevelOf(current_node) >= graph_.getLevelOf(neig)) {
-                continue;
+            if(current_level >= neig_level) {
+                break;
             }
 
-            auto new_dist = edge.distance + cost_to_current;
+            const auto new_dist = edge.distance + cost_to_current;
 
             if(new_dist < backward_distances_[neig]) {
                 heap.emplace(neig, new_dist);

@@ -13,7 +13,7 @@ services:
     environment:
       - PORT=9090
       - DATAFILE=/data.pbf
-      - NUMBER_OF_SPHERE_NODES=10000
+      - NUMBER_OF_SPHERE_NODES=200000
     ports:
       - "9090:9090"
 

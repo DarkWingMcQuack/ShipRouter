@@ -48,13 +48,15 @@ auto GraphContractor::contract(NodeId node) noexcept
     std::int64_t counter = 0;
 
     const auto edge_ids = graph_.getEdgeIdsOf(node);
+    std::int64_t contracted_neigbours = 0;
 
     for(auto i = 0ul; i < edge_ids.size(); i++) {
         auto outer_id = edge_ids[i];
         const auto& outer_edge = graph_.getEdge(outer_id);
         const auto source = outer_edge.target;
 
-        if(graph_.isAlreadyContracted(source) or source == node) {
+        if(graph_.isAlreadyContracted(source)) {
+            contracted_neigbours++;
             continue;
         }
 
@@ -65,7 +67,7 @@ auto GraphContractor::contract(NodeId node) noexcept
             const auto target = inner_edge.target;
             const auto distance_over_u = outer_edge.distance + inner_edge.distance;
 
-            if(graph_.isAlreadyContracted(target)){
+            if(graph_.isAlreadyContracted(target)) {
                 continue;
             }
 
@@ -85,27 +87,13 @@ auto GraphContractor::contract(NodeId node) noexcept
         }
     }
 
-    auto edge_diff = counter - countObsoleteEdges(node);
+    auto edge_diff = counter
+        - (static_cast<std::int64_t>(edge_ids.size()) * 2)
+        + contracted_neigbours;
 
     return NodeContractionResult{node,
                                  std::move(shortcuts),
                                  edge_diff};
-}
-
-auto GraphContractor::countObsoleteEdges(NodeId node) const noexcept
-    -> std::int64_t
-{
-    auto edge_ids = graph_.getEdgeIdsOf(node);
-
-    return std::count_if(std::begin(edge_ids),
-                         std::end(edge_ids),
-                         [this](auto id) {
-                             const auto& edge = graph_.getEdge(id);
-                             auto destination = edge.target;
-
-                             return !graph_.isAlreadyContracted(destination);
-                         })
-        * 2;
 }
 
 namespace {
@@ -114,7 +102,8 @@ auto removeBiggerThanAvg(std::vector<NodeContractionResult>& results) noexcept
 {
 
     auto avg = std::accumulate(std::begin(results),
-                               std::end(results), 0.0,
+                               std::end(results),
+							   0.0,
                                [](auto current, const auto& res) {
                                    return current + res.edge_diff;
                                })

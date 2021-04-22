@@ -34,12 +34,7 @@ private:
     auto contractSet(const std::vector<NodeId>& independent_set) noexcept
         -> IndependentSetContractionResult;
 
-    auto countObsoleteEdges(NodeId node) const noexcept
-        -> std::int64_t;
-
-
 private:
     Graph graph_;
     Dijkstra dijkstra_;
-    std::vector<bool> edge_deleted_;
 };
